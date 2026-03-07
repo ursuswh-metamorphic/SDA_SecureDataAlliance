@@ -21,6 +21,24 @@ CUDA 11.8+ (tuỳ chọn, nhưng khuyến nghị)
 2GB Disk cho models
 ```
 
+## 📑 Mục lục
+- [🌟 Tính năng chính](#-tính-năng-chính)
+- [📋 Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
+- [🚀 Hướng dẫn cài đặt](#-hướng-dẫn-cài-đặt)
+- [🎯 Cách sử dụng](#-cách-sử-dụng)
+- [📊 API Endpoints](#-api-endpoints)
+- [🔧 Cấu hình chính](#-cấu-hình-chính)
+- [📁 Cấu trúc Project](#-cấu-trúc-project)
+- [🧪 Testing](#-testing)
+- [🔒 Privacy Protection](#-privacy-protection)
+- [🚨 Troubleshooting](#-troubleshooting)
+- [📊 Performance Tips](#-performance-tips)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+- [📞 Contact & Support](#-contact--support)
+- [🎓 References](#-references)
+- [📈 Roadmap](#-roadmap)
+
 ## 🚀 Hướng dẫn cài đặt
 
 ### Step 1: Clone project
@@ -52,6 +70,8 @@ pip install -r requirements.txt
 
 ./start_chatbot.sh
 
+Trong một vài lần đầu phần downstream chưa tạo đủ embedding cho từng n client, VD: với 9 client sẽ có 9 embedding storage cho từng bên để thực hiện truy vấn, so sánh, trích xuất và dùng tài liệu đó để trả lời câu hỏi thế nên ở một số câu hỏi đầu hay hỏi chatbot một vài câu hỏi, để có thể tạo đầy đủ dữ liệu cho từng bên trong thư mục storage, storage của từng bên sẽ có tên dạng client_(number).
+Sau khi đã tạo đủ 9 thư mục client, thực hiện truy vấn như bình thường, tuy vậy sẽ có một vài trường hợp không tìm thấy tài liệu phù hợp sẽ bị treo, hãy tắt đi và thực hiện chạy lại câu lệnh trên.
 ---
 
 ## 📊 API Endpoints
