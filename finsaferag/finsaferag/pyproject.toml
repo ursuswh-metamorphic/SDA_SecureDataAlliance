@@ -1,0 +1,84 @@
+# =====================================================================
+# For a full TOML configuration guide, check the Flower docs:
+# https://flower.ai/docs/framework/how-to-configure-pyproject-toml.html
+# =====================================================================
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "finsaferag"
+version = "1.0.0"
+description = ""
+license = "Apache-2.0"
+# Dependencies for your Flower App
+dependencies = [
+    "flwr[simulation]>=1.23.0",
+    "flwr-datasets[vision]>=0.5.0",
+    "torch==2.7.1",
+    "torchvision==0.22.1",
+
+    # CHANGED: Thêm các thư viện phục vụ FedRAG
+    "datasets>=2.19.0",
+    "transformers>=4.40.0",
+    "llama-index>=0.11.0",
+    "faiss-cpu>=1.7.4",
+    "langchain>=0.2.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+
+[tool.flwr.app]
+publisher = "ANTformer"
+
+[tool.flwr.app.components]
+serverapp = "server_app:app"
+clientapp = "client_app:app"
+
+# Custom config values accessible via `context.run_config`
+[tool.flwr.app.config]
+# CHANGED: Bỏ các tham số training FL, thay bằng cấu hình cho FedRAG
+
+# Top-k docs sau khi merge RRF
+k-rrf = 10
+
+# Top-k docs mỗi client trả về
+k-nn = 10
+
+# "retrieval" (Mode 1) hoặc "client_ensemble" (Mode 2)
+synthesis-mode = "client_ensemble"
+
+# "none", "hyde_zeroshot", "stepback_zeroshot", "subquery_zeroshot", hoặc "auto"
+query-transform-mode = "none"
+
+# Đường dẫn HF model dùng cho LLMQuerier ở server (ensemble Mode 2)
+server-llm-hfpath = "gpt2"
+
+# "true" hoặc "false" (string, sẽ được parse trong code)
+server-llm-use-gpu = "false"
+
+# Default federation to use when running the app
+[tool.flwr.federations]
+default = "local-simulation"
+
+# Local simulation federation with 2 virtual SuperNodes
+[tool.flwr.federations.local-simulation]
+options.num-supernodes = 5
+options.backend.client-resources.num-cpus = 4
+options.backend.client-resources.num-gpus = 0
+
+# Keep server running
+[tool.flwr.federations.local-simulation.server]
+options.max-rounds = 1000  # Rất cao, server sẽ chạy lâu
+
+# Server config
+[tool.flwr.federations.local-simulation.client]
+options.num-supernodes = 1
+
+# Remote federation example for use with SuperLink
+[tool.flwr.federations.remote-federation]
+address = "<SUPERLINK-ADDRESS>:<PORT>"
+insecure = true  # Remove this line to enable TLS
+# root-certificates = "<PATH/TO/ca.crt>"  # For TLS setup
