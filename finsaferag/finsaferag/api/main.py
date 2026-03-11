@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import traceback
+import toml
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, Any
@@ -24,9 +25,11 @@ from api.models import (
     ErrorResponse,
     PrivacyStats,
     SourceNode,
+    LLMSettingsUpdate,
+    LLMSettingsResponse,
 )
 from api.router import get_router
-from config import Config
+from config import Config, _config_path
 
 # Import RAG components
 from llama_index.core import Settings
@@ -136,7 +139,7 @@ async def startup_event():
             chunk_size=getattr(cfg, "chunk_size", 512),
         )
 
-        logger.info(f"✓ Index loaded successfully for node: {node_id}")
+        logger.info(f"[OK] Index loaded successfully for node: {node_id}")
 
         # Create query engine
         logger.info("Creating query engine...")
@@ -170,7 +173,7 @@ async def startup_event():
         else:
             privacy_enabled = False
 
-        logger.info("✓ RAG Chatbot API started successfully!")
+        logger.info("[OK] RAG Chatbot API started successfully!")
         logger.info(
             f"  Privacy module: {'ENABLED' if (privacy_enabled and PRIVACY_AVAILABLE) else 'DISABLED'}"
         )
@@ -252,6 +255,89 @@ async def health_check():
         num_clients=num_clients,
         flower_grid_status=flower_grid_status,
     )
+
+
+@app.get("/api/settings", response_model=LLMSettingsResponse)
+async def get_settings():
+    """Get current LLM settings (API keys masked)"""
+    global cfg
+    if cfg is None:
+        cfg = Config()
+    llm = getattr(cfg, "llm", "gpt-4o-mini")
+    llm_provider = getattr(cfg, "llm_provider", "nvidia" if llm == "nvidia" else "openai")
+    api_key = getattr(cfg, "api_key", "") or ""
+    nvidia_api_key = getattr(cfg, "nvidia_api_key", "") or ""
+    return LLMSettingsResponse(
+        llm_provider=llm_provider,
+        llm=llm,
+        api_base=getattr(cfg, "api_base", None),
+        api_name=getattr(cfg, "api_name", None),
+        nvidia_api_base=getattr(cfg, "nvidia_api_base", None),
+        nvidia_model=getattr(cfg, "nvidia_model", None),
+        api_key_set=bool(api_key.strip()),
+        nvidia_api_key_set=bool(nvidia_api_key.strip()),
+    )
+
+
+@app.post("/api/settings")
+async def update_settings(update: LLMSettingsUpdate):
+    """Update LLM settings and reload. Affects single-machine mode; Flower mode may need restart."""
+    global cfg, query_engine
+
+    config_path = _config_path()
+    if not os.path.exists(config_path):
+        raise HTTPException(status_code=500, detail="config.toml not found")
+
+    try:
+        full_config = toml.load(config_path)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cannot load config: {e}")
+
+    # Update api_keys section
+    if "api_keys" not in full_config:
+        full_config["api_keys"] = {}
+    ak = full_config["api_keys"]
+
+    if update.llm_provider is not None:
+        ak["llm_provider"] = update.llm_provider
+    if update.api_key is not None:
+        ak["api_key"] = update.api_key
+    if update.api_base is not None:
+        ak["api_base"] = update.api_base
+    if update.api_name is not None:
+        ak["api_name"] = update.api_name
+    if update.nvidia_api_key is not None:
+        ak["nvidia_api_key"] = update.nvidia_api_key
+    if update.nvidia_api_base is not None:
+        ak["nvidia_api_base"] = update.nvidia_api_base
+    if update.nvidia_model is not None:
+        ak["nvidia_model"] = update.nvidia_model
+
+    # Update settings.llm
+    if "settings" not in full_config:
+        full_config["settings"] = {}
+    if update.llm is not None:
+        full_config["settings"]["llm"] = update.llm
+    elif update.llm_provider is not None:
+        full_config["settings"]["llm"] = update.llm_provider
+
+    try:
+        with open(config_path, "w", encoding="utf-8") as f:
+            toml.dump(full_config, f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Cannot write config: {e}")
+
+    # Reload config and LLM
+    try:
+        Config.reload()
+        cfg = Config()
+        llm = get_llm(cfg.llm)
+        Settings.llm = llm
+        logger.info(f"[OK] Settings updated. LLM: {cfg.llm}")
+        return {"status": "ok", "message": "Settings saved and LLM reloaded", "llm": cfg.llm}
+    except Exception as e:
+        logger.error(f"Failed to reload LLM: {e}")
+        raise HTTPException(status_code=500, detail=f"Config saved but LLM reload failed: {e}")
 
 
 @app.post("/api/query", response_model=QueryResponse)
@@ -590,7 +676,7 @@ async def query_federated(request: QueryRequest):
                     
                     if final_answer and final_answer.strip():
                         answer = final_answer
-                        logger.info(f"✓ [FEDERATED] Ensemble success: {answer[:100]}...")
+                        logger.info(f"[OK] [FEDERATED] Ensemble success: {answer[:100]}...")
                     else:
                         logger.warning("[FEDERATED] Ensemble returned empty")
                         answer = client_answers[0] if client_answers else ""
@@ -599,7 +685,7 @@ async def query_federated(request: QueryRequest):
                     logger.error(f"[FEDERATED] Ensemble failed: {e}")
                     answer = client_answers[0] if client_answers else ""
             else:
-                logger.error("[FEDERATED] ⚠️ LLMQuerier is None! Cannot ensemble")
+                logger.error("[FEDERATED] [WARN] LLMQuerier is None! Cannot ensemble")
                 answer = client_answers[0] if client_answers else ""
         else:
             logger.error("[FEDERATED] No client answers collected!")
