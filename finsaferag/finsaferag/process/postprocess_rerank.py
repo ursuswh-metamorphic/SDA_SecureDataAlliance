@@ -7,7 +7,7 @@ from llama_index.postprocessor.flag_embedding_reranker import FlagEmbeddingReran
 # !pip install llama-index-postprocessor-cohere-rerank
 
 def get_postprocessor(cfg):
-    # postprocess rerank, available: long_context_reorder, colbertv2_rerank, cohere_rerank, bge-reranker-base
+    # postprocess rerank, available: long_contedxt_reorder, colbertv2_rerank, cohere_rerank, bge-reranker-base
     if cfg.postprocess_rerank == 'long_context_reorder':
         return LongContextReorder()
     elif cfg.postprocess_rerank == 'colbertv2_rerank':

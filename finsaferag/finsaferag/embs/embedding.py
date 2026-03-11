@@ -22,22 +22,22 @@ def get_embedding(state_dict_path):
         absolute_path = os.path.join(project_root, state_dict_path)
         if os.path.exists(absolute_path) or os.path.isdir(absolute_path):
             model_path = os.path.abspath(absolute_path)
-            print(f"✓ Resolved relative path to: {model_path}")
+            print(f"[OK] Resolved relative path to: {model_path}")
         elif os.path.exists(state_dict_path):
             # Path exists as-is (relative to current working directory)
             model_path = os.path.abspath(state_dict_path)
-            print(f"✓ Found model at relative path: {model_path}")
+            print(f"[OK] Found model at relative path: {model_path}")
         else:
             # Assume it's a HuggingFace model ID
-            print(f"⚠️  Path not found, treating as HuggingFace model ID: {state_dict_path}")
+            print(f"[WARN] Path not found, treating as HuggingFace model ID: {state_dict_path}")
             model_path = state_dict_path
     elif os.path.isabs(state_dict_path):
         # Absolute path - check if exists
         if os.path.exists(state_dict_path) or os.path.isdir(state_dict_path):
-            print(f"✓ Found model at absolute path: {state_dict_path}")
+            print(f"[OK] Found model at absolute path: {state_dict_path}")
         else:
-            print(f"⚠️  Absolute path not found: {state_dict_path}")
-            print(f"⚠️  Trying as HuggingFace model ID or falling back to default")
+            print(f"[WARN] Absolute path not found: {state_dict_path}")
+            print(f"[WARN] Trying as HuggingFace model ID or falling back to default")
             # Try as-is first, will fallback in exception handler
             model_path = state_dict_path
 
@@ -52,7 +52,7 @@ def get_embedding(state_dict_path):
             model_name=model_path,
             device=device,
         )
-        print("✓ Created HuggingFaceEmbedding with device parameter")
+        print("[OK] Created HuggingFaceEmbedding with device parameter")
     except (TypeError, ValueError, Exception) as e:
         print(f"Device parameter approach failed: {e}, trying without device...")
         # Approach 2: Create without device, then move manually
@@ -60,16 +60,16 @@ def get_embedding(state_dict_path):
             embeddings = HuggingFaceEmbedding(
                 model_name=model_path,
             )
-            print("✓ Created HuggingFaceEmbedding without device parameter")
+            print("[OK] Created HuggingFaceEmbedding without device parameter")
         except Exception as e2:
-            print(f"❌ Failed to create HuggingFaceEmbedding: {e2}")
+            print(f"[ERR] Failed to create HuggingFaceEmbedding: {e2}")
             # Last resort: use default model
-            print("⚠️  Falling back to default model: BAAI/bge-base-en")
+            print("[WARN] Falling back to default model: BAAI/bge-base-en")
             try:
                 embeddings = HuggingFaceEmbedding(
                     model_name="BAAI/bge-base-en",
                 )
-                print("✓ Created default HuggingFaceEmbedding")
+                print("[OK] Created default HuggingFaceEmbedding")
             except Exception as e3:
                 raise RuntimeError(f"Failed to load any embedding model. Last error: {e3}")
     
@@ -165,7 +165,7 @@ def get_embedding(state_dict_path):
             print(f"Alternative approach also failed: {e}")
             print("You may need to manually ensure the model is on CUDA or check HuggingFaceEmbedding documentation.")
     elif model_moved:
-        print("✓ Embedding model device placement verified")
+        print("[OK] Embedding model device placement verified")
     
     # embeddings = BertModel.from_pretrained(state_dict_path)
     return embeddings

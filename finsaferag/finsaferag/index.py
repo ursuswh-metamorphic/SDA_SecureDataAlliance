@@ -10,7 +10,15 @@ from llama_index.core.node_parser import SentenceSplitter
 from llama_index.core.storage.docstore import SimpleDocumentStore
 from llama_index.core.node_parser import LangchainNodeParser, HierarchicalNodeParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from llama_index.vector_stores.faiss import FaissVectorStore
+try:
+    from llama_index.vector_stores.faiss import FaissVectorStore
+except ModuleNotFoundError as e:
+    try:
+        from llama_index.integrations.vector_stores.faiss import FaissVectorStore
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError(
+            "FaissVectorStore not found. Install: pip install llama-index-vector-stores-faiss"
+        ) from e
 
 # Thay loader cũ bằng loader federated (module riêng tùy chỉnh để có thể chia dataset cho nhiều bên dựa trên node_id của từng client)
 from data.fedrag_data_loader import get_client_documents

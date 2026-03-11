@@ -5,7 +5,7 @@ from pathlib import Path
 
 def build_rag_corpus(
     test_corpus_path: str = "test_corpus_backup.json",
-    val_qa_path: str = "data_50.json",
+    val_qa_path: str = "data/data_50.json",
     out_path: str = "rag_corpus.json",
     max_corpus_docs: int = 6066,
 ) -> None:
@@ -23,7 +23,7 @@ def build_rag_corpus(
     if not test_corpus_path.exists():
         test_corpus_path.parent.mkdir(parents=True, exist_ok=True)
         test_corpus_path.write_text("{}")
-        print(f"✓ Created empty: {test_corpus_path}")
+        print(f"[OK] Created empty: {test_corpus_path}")
     with test_corpus_path.open("r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -73,7 +73,7 @@ def build_rag_corpus(
     with out_path.open("w", encoding="utf-8") as f:
         json.dump(docs, f, ensure_ascii=False, indent=2)
 
-    print(f"✅ Saved to {out_path}")
+    print(f"[OK] Saved to {out_path}")
 
 
 if __name__ == "__main__":
