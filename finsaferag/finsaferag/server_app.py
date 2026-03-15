@@ -10,6 +10,7 @@ import traceback
 from flwr.app import ConfigRecord, Context, Message, MessageType, RecordDict
 from flwr.serverapp import Grid, ServerApp
 from llms.llm import get_llm
+from domain_prompts import get_ensemble_prompt_prefix, get_domain
 
 import threading
 import uvicorn
@@ -65,31 +66,30 @@ def merge_documents(documents, scores, knn, k_rrf=0):
     return [item["doc"] for item in sorted_rrf[:knn]]
 
 
-def ensemble_answers(client_answers, llm_querier):
+def ensemble_answers(client_answers, llm_querier, domain: str = None):
     """
     Ensemble multiple client answers into one final synthesized answer.
-    
+
     Args:
         client_answers: List of answers from different clients
         llm_querier: LLM object with .complete() or .query() method
-    
+        domain: Optional domain for prompts (financial, medical, legal, etc.).
+                If None, uses config.domain.
+
     Returns:
         str: Synthesized final answer
     """
-    
     if not client_answers:
         log.warning("[ENSEMBLE] No client answers to ensemble")
         return ""
-    
+
     if len(client_answers) == 1:
         log.info(f"[ENSEMBLE] Only 1 answer, returning as-is: {client_answers[0][:80]}...")
         return client_answers[0]
 
-    # ⭐ Build ensemble prompt
-    ensemble_prompt = (
-        "You are a senior financial analyst. Below are answers from different financial data sources. "
-        "Synthesize them into ONE comprehensive, accurate final answer.\n\n"
-    )
+    # ⭐ Build ensemble prompt (domain-aware)
+    domain = domain or get_domain()
+    ensemble_prompt = get_ensemble_prompt_prefix(domain)
     
     for i, ans in enumerate(client_answers, 1):
         ensemble_prompt += f"[Source {i}] {ans}\n\n"

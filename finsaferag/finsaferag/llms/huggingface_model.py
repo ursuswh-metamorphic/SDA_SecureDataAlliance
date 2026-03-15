@@ -108,8 +108,8 @@ def llama_completion_to_prompt(completion):
         why instead of answering something not correct. If you don't know the answer 
         to a question, please don't share false information.
 
-        Your goal is to provide answers relating to the financial performance of 
-        the company.<</SYS>>
+        Your goal is to provide accurate answers based on the retrieved context.
+        Adapt your tone to the domain (financial, medical, legal, technical, etc.).<</SYS>>
         {completion} [/INST]"""
 
 

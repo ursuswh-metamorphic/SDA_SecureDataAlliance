@@ -59,7 +59,7 @@ import flgo.algorithm
 sample_list=['uniform', 'md', 'full', 'uniform_available', 'md_available', 'full_available'] # sampling options for the default sampling method in flgo.algorihtm.fedbase
 agg_list=['uniform', 'weighted_scale', 'weighted_com'] # aggregation options for the default aggregating method in flgo.algorihtm.fedbase
 optimizer_list=['SGD', 'Adam', 'RMSprop', 'Adagrad'] # supported optimizers
-default_option_dict = {'save_checkpoint':'', 'load_checkpoint':'','pretrain': '', 'sample': 'md', 'aggregate': 'uniform', 'num_rounds': 20, 'proportion': 0.2, 'learning_rate_decay': 0.998, 'lr_scheduler': -1, 'early_stop': -1, 'num_epochs': 5, 'num_steps': -1, 'learning_rate': 0.1, 'batch_size': 64.0, 'optimizer': 'SGD', 'clip_grad':0.0,'momentum': 0.0, 'weight_decay': 0.0, 'num_edge_rounds':5, 'algo_para': [], 'train_holdout': 0.1, 'test_holdout': 0.0, 'local_test':False,'seed': 0,'dataseed':0, 'gpu': [], 'server_with_cpu': False, 'num_parallels': 1, 'parallel_type':'t', 'num_workers': 0, 'pin_memory':False,'test_batch_size': 512,'pin_memory':False ,'simulator': 'default_simulator', 'availability': 'IDL', 'connectivity': 'IDL', 'completeness': 'IDL', 'responsiveness': 'IDL', 'logger': 'basic_logger', 'log_level': 'INFO', 'log_file': False, 'no_log_console': False, 'no_overwrite': False, 'eval_interval': 1}
+default_option_dict = {'save_checkpoint':'', 'load_checkpoint':'','pretrain': '', 'sample': 'md', 'aggregate': 'uniform', 'num_rounds': 20, 'proportion': 0.2, 'learning_rate_decay': 0.998, 'lr_scheduler': -1, 'early_stop': -1, 'num_epochs': 5, 'num_steps': -1, 'learning_rate': 0.1, 'batch_size': 64.0, 'optimizer': 'SGD', 'clip_grad':0.0,'momentum': 0.0, 'weight_decay': 0.0, 'num_edge_rounds':5, 'algo_para': [], 'train_holdout': 0.1, 'test_holdout': 0.0, 'local_test':False,'seed': 0,'dataseed':0, 'gpu': [], 'server_with_cpu': False, 'num_parallels': 1, 'parallel_type':'t', 'num_workers': 0, 'pin_memory':False,'test_batch_size': 512,'pin_memory':False ,'simulator': 'default_simulator', 'availability': 'IDL', 'connectivity': 'IDL', 'completeness': 'IDL', 'responsiveness': 'IDL', 'logger': 'basic_logger', 'log_level': 'INFO', 'log_file': False, 'no_log_console': False, 'no_overwrite': False, 'eval_interval': 1, 'dp_enabled': False, 'dp_clip_norm': 1.0, 'dp_noise_multiplier': 0.1}
 
 if zmq is not None: _ctx = zmq.Context()
 else: _ctx = None
@@ -135,6 +135,9 @@ def read_option_from_command():
     parser.add_argument('--batch_size', help='batch size', type=float, default='64')
     parser.add_argument('--optimizer', help='select the optimizer for gd', type=str, choices=optimizer_list, default='SGD')
     parser.add_argument('--clip_grad', help='clipping gradients if the max norm of gradients ||g|| > clip_norm > 0', type=float, default=0.0)
+    parser.add_argument('--dp_enabled', help='enable Differential Privacy (DP-SGD) for federated training', action='store_true', default=False)
+    parser.add_argument('--dp_clip_norm', help='DP clipping norm C (max gradient L2 norm)', type=float, default=1.0)
+    parser.add_argument('--dp_noise_multiplier', help='DP noise multiplier sigma for Gaussian noise', type=float, default=0.1)
     parser.add_argument('--momentum', help='momentum of local training', type=float, default=0.0)
     parser.add_argument('--weight_decay', help='weight decay of local training', type=float, default=0.0)
     parser.add_argument('--num_edge_rounds', help='number of edge rounds in hierFL', type=int, default=5)

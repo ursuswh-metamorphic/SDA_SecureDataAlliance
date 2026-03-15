@@ -16,9 +16,9 @@ API_BASE_URL = "http://localhost:8000"
 DEFAULT_SESSION_ID = "streamlit_session"
 
 
-# Page configuration
+# Page configuration (title updated dynamically when API is available)
 st.set_page_config(
-    page_title="Financial Q&A Chatbot",
+    page_title="RAG Q&A Chatbot",
     page_icon="💰",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -672,6 +672,27 @@ def check_api_health() -> Dict[str, Any]:
         return {"status": "error", "error": str(e)}
 
 
+def fetch_domain_info() -> Dict[str, Any]:
+    """Fetch domain-aware UI strings (welcome, examples) from API."""
+    try:
+        r = requests.get(f"{API_BASE_URL}/api/domain_info", timeout=5)
+        if r.status_code == 200:
+            return r.json()
+    except Exception:
+        pass
+    return {
+        "domain": "financial",
+        "welcome_title": "Financial Q&A Chatbot",
+        "welcome_subtitle": "Ask me anything about financial reports, earnings, and market data",
+        "example_questions": [
+            {"icon": "📊", "text": "What is 3M's revenue in 2019?"},
+            {"icon": "👔", "text": "Who is the CEO of Apple?"},
+            {"icon": "💹", "text": "Show me Tesla's profit margin"},
+            {"icon": "📈", "text": "What are the main products of Microsoft?"},
+        ],
+    }
+
+
 def fetch_llm_settings() -> Optional[Dict[str, Any]]:
     """Fetch current LLM settings from API"""
     try:
@@ -875,10 +896,10 @@ def sidebar_config():
         st.divider()
         
         st.subheader("Retriever")
-        st.info("MOCK Mode: All queries to default")
+        st.caption("Domain routing: auto-detect or choose manually")
         retriever_type = st.selectbox(
             "Type",
-            ["default", "financial", "general", "technical", "legal"]
+            ["default", "financial", "medical", "legal", "technical", "general"]
         )
 
         st.divider()
@@ -990,24 +1011,28 @@ def sidebar_config():
 
 
 def show_welcome_screen():
-    """Show welcome screen with example questions"""
-    st.markdown("""
+    """Show welcome screen with domain-aware title, subtitle, and example questions"""
+    domain_info = fetch_domain_info()
+    title = domain_info.get("welcome_title", "RAG Q&A Chatbot")
+    subtitle = domain_info.get("welcome_subtitle", "Ask me anything based on the indexed documents")
+    examples = domain_info.get("example_questions", [])
+
+    st.markdown(f"""
     <div class="welcome-screen">
-        <div class="welcome-title">💰 Financial Q&A Chatbot</div>
+        <div class="welcome-title">💰 {title}</div>
         <div class="welcome-subtitle">
-            Ask me anything about financial reports, earnings, and market data
+            {subtitle}
         </div>
     </div>
     """, unsafe_allow_html=True)
-    
+
     st.markdown("### 💡 Try asking:")
-    
-    examples = [
-        {"icon": "📊", "text": "What is 3M's revenue in 2019?"},
-        {"icon": "👔", "text": "Who is the CEO of Apple?"},
-        {"icon": "💹", "text": "Show me Tesla's profit margin"},
-        {"icon": "📈", "text": "What are the main products of Microsoft?"},
-    ]
+
+    if not examples:
+        examples = [
+            {"icon": "❓", "text": "What does this document say?"},
+            {"icon": "📄", "text": "Summarize the key points"},
+        ]
     
     cols = st.columns(2)
     for idx, example in enumerate(examples):

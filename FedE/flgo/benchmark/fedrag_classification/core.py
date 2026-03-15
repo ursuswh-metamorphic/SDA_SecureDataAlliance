@@ -52,7 +52,7 @@ class FEDRAG(Dataset):
     def __init__(self, train=True):
         self.train = train
         # TODO 加载数据集
-        with open("./select_data.json", 'r', encoding='utf-8') as f:
+        with open("./new_select_data.json", 'r', encoding='utf-8') as f:
             data = json.load(f)
 
         self.questions = []
@@ -76,7 +76,7 @@ class FEDRAG(Dataset):
 
 class TaskGenerator(BasicTaskGenerator):
     # TODO 加载数据集
-    def __init__(self, rawdata_path="./select_data.json"):
+    def __init__(self, rawdata_path="./new_select_data.json"):
         super(TaskGenerator, self).__init__(benchmark='fedrag_classification', rawdata_path=rawdata_path)
         # Regular expression to capture an actors name, and line continuation
 

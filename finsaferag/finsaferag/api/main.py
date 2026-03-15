@@ -229,6 +229,10 @@ async def health_check():
     if router:
         available_retrievers = router.get_available_retrievers()
 
+    domain = "financial"
+    if cfg:
+        domain = getattr(cfg, "domain", "financial") or "financial"
+
     # 🔹 THÊM: Check Flower grid status
     federated_ready = False
     num_clients = 0
@@ -251,10 +255,38 @@ async def health_check():
         version="1.0.0",
         privacy_enabled=privacy_enabled and PRIVACY_AVAILABLE,
         available_retrievers=available_retrievers,
+        domain=domain,
         federated_ready=federated_ready,
         num_clients=num_clients,
         flower_grid_status=flower_grid_status,
     )
+
+
+@app.get("/api/domain_info")
+async def get_domain_info():
+    """Get domain-aware UI strings (welcome title, subtitle, example questions)."""
+    try:
+        from domain_prompts import get_domain, get_welcome_title, get_welcome_subtitle, get_example_questions
+        domain = get_domain()
+        return {
+            "domain": domain,
+            "welcome_title": get_welcome_title(domain),
+            "welcome_subtitle": get_welcome_subtitle(domain),
+            "example_questions": get_example_questions(domain),
+        }
+    except Exception as e:
+        logger.warning(f"domain_prompts not available: {e}")
+        return {
+            "domain": "financial",
+            "welcome_title": "Financial Q&A Chatbot",
+            "welcome_subtitle": "Ask me anything about financial reports, earnings, and market data",
+            "example_questions": [
+                {"icon": "📊", "text": "What is 3M's revenue in 2019?"},
+                {"icon": "👔", "text": "Who is the CEO of Apple?"},
+                {"icon": "💹", "text": "Show me Tesla's profit margin"},
+                {"icon": "📈", "text": "What are the main products of Microsoft?"},
+            ],
+        }
 
 
 @app.get("/api/settings", response_model=LLMSettingsResponse)
@@ -646,6 +678,12 @@ async def query_federated(request: QueryRequest):
                 logger.warning(f"[FEDERATED] Question privacy failed: {e}")
                 privacy_applied = False
 
+        # Route query to get domain for ensemble prompts
+        routing_decision = router.route_query(
+            query=question, user_preference=request.retriever_type
+        )
+        routed_domain = routing_decision.get("retriever_type") or routing_decision.get("detected_domain")
+
         # Call federated system with sanitized question
         fed_result = submit_question_to_federated(
             question=question,  # ← Now sanitized
@@ -671,8 +709,10 @@ async def query_federated(request: QueryRequest):
                 logger.info(f"[FEDERATED] Ensembling {len(client_answers)} answers via LLM...")
                 try:
                     from server_app import ensemble_answers as ensemble_fn
-                    
-                    final_answer = ensemble_fn(client_answers, _llm_querier)
+
+                    final_answer = ensemble_fn(
+                        client_answers, _llm_querier, domain=routed_domain
+                    )
                     
                     if final_answer and final_answer.strip():
                         answer = final_answer

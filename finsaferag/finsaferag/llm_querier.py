@@ -2,6 +2,7 @@
 
 import os
 import logging
+from typing import Optional
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -34,6 +35,7 @@ class LLMQuerier:
         self,
         ensemble_prompt: str,
         max_new_tokens: int = 50,
+        domain: Optional[str] = None,
     ) -> str:
         """
         Synthesize ensemble answer from multiple client answers using LLM.
@@ -47,7 +49,7 @@ class LLMQuerier:
             Synthesized answer (str)
         """
         try:
-            formatted_prompt = self.__format_ensemble_prompt(ensemble_prompt)
+            formatted_prompt = self.__format_ensemble_prompt(ensemble_prompt, domain)
             
             inputs = self.tokenizer(
                 formatted_prompt,
@@ -86,15 +88,10 @@ class LLMQuerier:
             raise
 
     @classmethod
-    def __format_ensemble_prompt(cls, ensemble_prompt: str) -> str:
-        """Format ensemble prompt for LLM processing specialized for finance."""
-        system_instruction = (
-            "You are a senior financial analyst specializing in synthesizing answers from multiple "
-            "retrieval sources into one accurate and concise final response. "
-            "Provide a brief reasoning step (1–2 sentences) before the final answer. "
-            "Focus on factual correctness, consistency across sources, and eliminate contradictions. "
-            "Maintain a professional analytical tone consistent with financial reporting."
-        )
+    def __format_ensemble_prompt(cls, ensemble_prompt: str, domain: Optional[str] = None) -> str:
+        """Format ensemble prompt for LLM processing (domain-aware)."""
+        from domain_prompts import get_ensemble_system_instruction
+        system_instruction = get_ensemble_system_instruction(domain)
         return f"""{system_instruction}
 
 {ensemble_prompt}

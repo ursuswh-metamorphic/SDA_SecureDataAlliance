@@ -21,6 +21,7 @@ from process.query_transform import transform_and_query, transform
 from llama_index.core.query_engine import RetrieverQueryEngine
 from llama_index.core import Settings, PromptTemplate
 from data.fedrag_data_loader import map_node_to_pid
+from domain_prompts import get_text_qa_template, get_domain
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -34,29 +35,10 @@ _embedding_cache: Dict[str, Any] = {}
 # Cache indexes to avoid reloading from disk
 _index_cache: Dict[str, Any] = {}
 
-# ============= Custom Prompt Template (từ main_response.py) =============
-TEXT_QA_TEMPLATE_STR = (
-    "Below are some examples of concise financial question answering:\n"
-    "Q: What was Apple's revenue growth in 2023? A: 2.8%.\n"
-    "Q: When did the Federal Reserve raise interest rates last? A: 2023-07.\n"
-    "---------------------\n"
-    "Below is the financial context information.\n"
-    "---------------------\n"
-    "{context_str}\n"
-    "---------------------\n"
-    "Based solely on the above context, and without using ANY prior knowledge, "
-    "answer the following financial question as concisely as possible: {query_str}\n"
-    "Instructions:\n"
-    "*   Answer EXTREMELY briefly in a factual, finance-oriented tone.\n"
-    "*   Use ONLY numbers, dates, metrics, and facts appearing in the context.\n"
-    "*   If units are required (e.g., %, USD, billion, YoY/ QoQ), include them.\n"
-    "*   Format your answer precisely as requested, e.g., \"X.X%\", \"USD X.XB\", \"YYYY-MM-DD\".\n"
-    "*   If a calculation is needed and the units are clear, compute the result and round appropriately.\n"
-    "*   Do NOT speculate, generalize, or use outside financial knowledge — rely strictly on the provided context."
-)
-
-
-TEXT_QA_TEMPLATE = PromptTemplate(TEXT_QA_TEMPLATE_STR)
+# ============= Custom Prompt Template (domain-aware) =============
+def _get_text_qa_prompt_template(domain: str = None):
+    """Get PromptTemplate for QA based on configured domain."""
+    return PromptTemplate(get_text_qa_template(domain))
 # ========================================================================
 
 
@@ -167,7 +149,7 @@ def _ensure_engine(
 
         # Template override
         query_engine.update_prompts(
-            {"response_synthesizer:text_qa_template": TEXT_QA_TEMPLATE}
+            {"response_synthesizer:text_qa_template": _get_text_qa_prompt_template(get_domain())}
         )
 
         log.info(f"Created QueryEngine with synthesis for node {node_id}")

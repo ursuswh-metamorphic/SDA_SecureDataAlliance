@@ -78,6 +78,7 @@ class HealthResponse(BaseModel):
     version: str = Field(..., description="API version")
     privacy_enabled: bool = Field(..., description="Privacy module status")
     available_retrievers: List[str] = Field([], description="Available retriever types")
+    domain: str = Field("financial", description="Current domain (financial, medical, legal, technical, general)")
     federated_ready: bool = False
     num_clients: int = 0
     flower_grid_status: str = "not_connected"  

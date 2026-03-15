@@ -12,31 +12,43 @@ from flwr_datasets.partitioner import IidPartitioner
 # ================================
 NUM_CLIENTS = 10
 
-# Xác định đường dẫn tuyệt đối tới rag_corpus.json
 # BASE_DIR = .../finsaferag/finsaferag
 BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
 
-# Thử 2 vị trí phổ biến:
-# 1) finsaferag/finsaferag/rag_corpus.json
-# 2) finsaferag/finsaferag/data/rag_corpus.json
-CANDIDATE_PATHS = [
-    BASE_DIR / "rag_corpus.json",
-    BASE_DIR / "data" / "rag_corpus.json",
-]
 
-RAG_CORPUS_FILE = None
-for p in CANDIDATE_PATHS:
-    if p.is_file():
-        RAG_CORPUS_FILE = p
-        break
-
-if RAG_CORPUS_FILE is None:
+def _resolve_rag_corpus_path() -> Path:
+    """Resolve rag_corpus path from config or default locations (domain-aware)."""
+    try:
+        from config import Config
+        cfg = Config()
+        data_dir = getattr(cfg, "data_dir", ".") or "."
+        corpus_file = getattr(cfg, "corpus_file", "rag_corpus.json") or "rag_corpus.json"
+        if data_dir in (".", ""):
+            candidates = [
+                BASE_DIR / corpus_file,
+                DATA_DIR / corpus_file,
+            ]
+        else:
+            candidates = [
+                DATA_DIR / data_dir / corpus_file,
+                BASE_DIR / data_dir / corpus_file,
+            ]
+    except Exception:
+        candidates = [
+            BASE_DIR / "rag_corpus.json",
+            DATA_DIR / "rag_corpus.json",
+        ]
+    for p in candidates:
+        if p.is_file():
+            return p
     raise FileNotFoundError(
-        "Không tìm thấy 'rag_corpus.json'. "
-        f"Đã thử các path: {[str(p) for p in CANDIDATE_PATHS]}"
+        "Không tìm thấy corpus file. "
+        f"Đã thử các path: {[str(p) for p in candidates]}"
     )
 
-# Dùng đường dẫn tuyệt đối cho FederatedDataset
+
+RAG_CORPUS_FILE = _resolve_rag_corpus_path()
 RAG_CORPUS_PATH = str(RAG_CORPUS_FILE)
 
 # ================================

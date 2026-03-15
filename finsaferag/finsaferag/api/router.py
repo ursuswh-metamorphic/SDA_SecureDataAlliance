@@ -11,11 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class RetrieverType(str, Enum):
-    """Available retriever types"""
+    """Available retriever types (multi-domain)"""
     FINANCIAL = "financial"  # Financial documents
-    GENERAL = "general"      # General knowledge
-    TECHNICAL = "technical"  # Technical documentation
+    MEDICAL = "medical"      # Medical/healthcare
     LEGAL = "legal"          # Legal documents
+    TECHNICAL = "technical"  # Technical documentation
+    GENERAL = "general"      # General knowledge
     DEFAULT = "default"      # Default retriever
 
 
@@ -31,20 +32,29 @@ class QueryRouter:
         self.available_retrievers = [r.value for r in RetrieverType]
         logger.info(f"QueryRouter initialized with retrievers: {self.available_retrievers}")
         
-        # Mock: Keywords for different domains (for future implementation)
+        # Keywords for domain detection (used when no user preference)
         self.domain_keywords = {
             RetrieverType.FINANCIAL: [
-                "revenue", "profit", "earnings", "stock", "investment", 
+                "revenue", "profit", "earnings", "stock", "investment",
                 "financial", "fiscal", "balance sheet", "income statement",
-                "cash flow", "EBITDA", "ROI", "market cap", "dividend"
+                "cash flow", "EBITDA", "ROI", "market cap", "dividend",
+                "10-K", "10-Q", "SEC", "quarterly report"
             ],
-            RetrieverType.TECHNICAL: [
-                "algorithm", "code", "programming", "API", "database",
-                "architecture", "deployment", "testing", "debug"
+            RetrieverType.MEDICAL: [
+                "symptom", "diagnosis", "treatment", "patient", "clinical",
+                "medical", "health", "disease", "drug", "dosage", "therapy",
+                "FDA", "prescription", "vaccine", "surgery", "hospital",
+                "hypertension", "diabetes", "cancer", "COVID"
             ],
             RetrieverType.LEGAL: [
                 "contract", "law", "regulation", "compliance", "policy",
-                "agreement", "terms", "legal", "litigation"
+                "agreement", "terms", "legal", "litigation", "GDPR",
+                "NDA", "copyright", "patent", "liability"
+            ],
+            RetrieverType.TECHNICAL: [
+                "algorithm", "code", "programming", "API", "database",
+                "architecture", "deployment", "testing", "debug",
+                "endpoint", "REST", "OAuth", "documentation"
             ],
             RetrieverType.GENERAL: []  # Fallback
         }
@@ -84,17 +94,25 @@ class QueryRouter:
                 "fallback": False
             }
         
-        # MOCK: Simple keyword-based routing (placeholder for ML model)
+        # Keyword-based domain detection
         detected_type = self._keyword_match(query)
-        
-        # MOCK: For now, always route to DEFAULT (current implementation)
-        # In future, this will route to specific retrievers
+
+        # Route to detected domain if confident, else DEFAULT
+        # All retriever types use same underlying Vector/BM25; routing affects prompts/hints
+        if detected_type and detected_type != RetrieverType.DEFAULT.value:
+            return {
+                "retriever_type": detected_type,
+                "confidence": 0.85,
+                "reasoning": f"Detected domain '{detected_type}' from query keywords",
+                "fallback": False,
+                "detected_domain": detected_type
+            }
         return {
             "retriever_type": RetrieverType.DEFAULT.value,
-            "confidence": 0.8,
-            "reasoning": f"MOCK: Detected domain '{detected_type}' but routing to DEFAULT (current implementation)",
+            "confidence": 0.7,
+            "reasoning": "No specific domain detected, using default retriever",
             "fallback": False,
-            "detected_domain": detected_type
+            "detected_domain": detected_type or RetrieverType.DEFAULT.value
         }
     
     def _keyword_match(self, query: str) -> str:
@@ -110,12 +128,12 @@ class QueryRouter:
             score = sum(1 for kw in keywords if kw.lower() in query_lower)
             domain_scores[domain] = score
         
-        # Get domain with highest score
+        # Get domain with highest score (tie-break: first in enum order)
         if domain_scores:
-            best_domain = max(domain_scores.items(), key=lambda x: x[1])
+            best_domain = max(domain_scores.items(), key=lambda x: (x[1], -list(RetrieverType).index(x[0])))
             if best_domain[1] > 0:
                 return best_domain[0].value
-        
+
         return RetrieverType.DEFAULT.value
     
     def get_available_retrievers(self) -> List[str]:

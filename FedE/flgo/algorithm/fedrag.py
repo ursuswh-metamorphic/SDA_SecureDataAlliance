@@ -106,6 +106,26 @@ class Client(BasicClient):
                 f"client running:{iter}/{self.num_steps}, client loss: {client_loss}, loss 1: {client_only}, loss 2: {server_only}")
 
             client_loss.backward()
+
+            # Differential Privacy (DP-SGD): Gradient Clipping + Gaussian Noise
+            if self.option.get('dp_enabled', False):
+                max_norm = self.option.get('dp_clip_norm', 1.0)
+                noise_multiplier = self.option.get('dp_noise_multiplier', 0.1)
+                # Step 1: Gradient Clipping
+                torch.nn.utils.clip_grad_norm_(local_model.parameters(), max_norm=max_norm)
+                # Step 2: Gaussian Noise Injection (std = sigma * C)
+                with torch.no_grad():
+                    for param in local_model.parameters():
+                        if param.grad is not None:
+                            noise_std = noise_multiplier * max_norm
+                            noise = torch.normal(
+                                0, noise_std,
+                                size=param.grad.shape,
+                                device=param.grad.device,
+                                dtype=param.grad.dtype,
+                            )
+                            param.grad += noise
+
             optimizer.step()
 
             if iter == self.num_steps - 1:
