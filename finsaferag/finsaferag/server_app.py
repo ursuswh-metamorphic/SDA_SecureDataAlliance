@@ -127,7 +127,7 @@ def ensemble_answers(client_answers, llm_querier):
         
         # Validate result
         if result_str and len(result_str) > 30:
-            log.info(f"✓ [ENSEMBLE] Success: {result_str[:100]}...")
+            log.info(f"[OK] [ENSEMBLE] Success: {result_str[:100]}...")
             return result_str
         else:
             log.warning(f"[ENSEMBLE] LLM returned too short result: '{result_str}'")
@@ -152,10 +152,10 @@ app = ServerApp()
 
 @app.main()
 def main(grid: Grid, context: Context) -> None:
-    log.info("🚀 Flower Federated Server starting...")
+    log.info("[START] Flower Federated Server starting...")
     """Flower Server Main Entry Point"""
     log.info("=" * 60)
-    log.info("🚀 Flower Federated RAG Server Starting...")
+    log.info("[START] Flower Federated RAG Server Starting...")
     log.info("=" * 60)
 
     global _llm_querier, _grid
@@ -163,7 +163,7 @@ def main(grid: Grid, context: Context) -> None:
     # ⭐ Step 1: Load config
     try:
         cfg = Config()
-        log.info(f"✓ Config loaded")
+        log.info(f"[OK] Config loaded")
     except Exception as e:
         log.error(f"Failed to load config: {e}")
         cfg = None
@@ -172,18 +172,18 @@ def main(grid: Grid, context: Context) -> None:
     llm_querier = None
     try:
         if cfg and hasattr(cfg, 'llm_config'):
-            llm_model_name = getattr(cfg.llm_config, 'model_name', 'chatgpt-3.5')
+            llm_model_name = getattr(cfg.llm_config, 'model_name', getattr(cfg, 'llm', 'nvidia'))
         else:
-            llm_model_name = "chatgpt-3.5"  # Default
+            llm_model_name = getattr(cfg, 'llm', 'nvidia') if cfg else "nvidia"
         
         log.info(f"[LLM] Loading model: {llm_model_name}")
         llm_querier = get_llm(llm_model_name)  # ← ⭐ USE get_llm() FROM llm.py
         
-        log.info(f"✓ [LLM] Successfully initialized: {llm_model_name}")
-        log.info(f"✓ [LLM] Type: {type(llm_querier).__name__}")
+        log.info(f"[OK] [LLM] Successfully initialized: {llm_model_name}")
+        log.info(f"[OK] [LLM] Type: {type(llm_querier).__name__}")
     
     except Exception as e:
-        log.error(f"✗ [LLM] Failed to initialize: {e}")
+        log.error(f"[FAIL] [LLM] Failed to initialize: {e}")
         log.error(traceback.format_exc())
         llm_querier = None
     
@@ -194,12 +194,12 @@ def main(grid: Grid, context: Context) -> None:
     # ⭐ FIX 2: Pass LLMQuerier đến API
     from api.main import set_flower_grid
     set_flower_grid(grid, llm_querier)  # ← THÊM llm_querier
-    log.info("🔗 Flower Grid + LLMQuerier connected to FastAPI")
+    log.info("[OK] Flower Grid + LLMQuerier connected to FastAPI")
 
     # Start FastAPI
     fastapi_thread = threading.Thread(target=start_fastapi, daemon=True)
     fastapi_thread.start()
-    log.info("🌐 FastAPI started inside Flower process")
+    log.info("[OK] FastAPI started inside Flower process")
     
     import time
     while True:

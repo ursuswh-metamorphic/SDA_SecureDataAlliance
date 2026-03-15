@@ -672,6 +672,26 @@ def check_api_health() -> Dict[str, Any]:
         return {"status": "error", "error": str(e)}
 
 
+def fetch_llm_settings() -> Optional[Dict[str, Any]]:
+    """Fetch current LLM settings from API"""
+    try:
+        r = requests.get(f"{API_BASE_URL}/api/settings", timeout=5)
+        if r.status_code == 200:
+            return r.json()
+    except Exception:
+        pass
+    return None
+
+
+def update_llm_settings(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Update LLM settings via API"""
+    try:
+        r = requests.post(f"{API_BASE_URL}/api/settings", json=payload, timeout=10)
+        return {"success": r.status_code == 200, "data": r.json() if r.status_code == 200 else None, "error": r.text if r.status_code != 200 else None}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 def check_federated_health() -> Dict[str, Any]:
     """Check if Federated Server is ready"""
     try:
@@ -855,11 +875,101 @@ def sidebar_config():
         st.divider()
         
         st.subheader("Retriever")
-        st.info("🚧 MOCK Mode: All queries → default")
+        st.info("MOCK Mode: All queries to default")
         retriever_type = st.selectbox(
             "Type",
             ["default", "financial", "general", "technical", "legal"]
         )
+
+        st.divider()
+
+        st.subheader("LLM Settings")
+        llm_settings = fetch_llm_settings()
+        if llm_settings:
+            provider = st.selectbox(
+                "Provider",
+                ["nvidia", "openai"],
+                index=0 if llm_settings.get("llm_provider") == "nvidia" else 1,
+                help="NVIDIA: open source models via API. OpenAI: GPT models",
+                key="llm_provider_select"
+            )
+            if provider == "nvidia":
+                nvidia_key = st.text_input(
+                    "NVIDIA API Key",
+                    value="",
+                    type="password",
+                    placeholder="nvapi-xxx" if not llm_settings.get("nvidia_api_key_set") else "****",
+                    help="Get key at build.nvidia.com",
+                    key="nvidia_api_key"
+                )
+                
+                current_model = llm_settings.get("nvidia_model") or "meta/llama-3.1-8b-instruct"
+                
+                # Text input for model - user can type ANY model
+                nvidia_model = st.text_input(
+                    "Model ID",
+                    value=current_model,
+                    placeholder="e.g., meta/llama-3.1-8b-instruct",
+                    help="Enter model ID from build.nvidia.com",
+                    key="nvidia_model_input"
+                )
+                
+                # Quick select buttons for common models
+                st.caption("Quick select:")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if st.button("llama-3.1-8b", key="q1", use_container_width=True):
+                        st.session_state["nvidia_model_input"] = "meta/llama-3.1-8b-instruct"
+                        st.rerun()
+                    if st.button("mistral-7b", key="q3", use_container_width=True):
+                        st.session_state["nvidia_model_input"] = "mistralai/mistral-7b-instruct-v0.3"
+                        st.rerun()
+                with col2:
+                    if st.button("gemma-2-9b", key="q2", use_container_width=True):
+                        st.session_state["nvidia_model_input"] = "google/gemma-2-9b-it"
+                        st.rerun()
+                    if st.button("deepseek-r1", key="q4", use_container_width=True):
+                        st.session_state["nvidia_model_input"] = "deepseek-ai/deepseek-r1"
+                        st.rerun()
+                
+                if st.button("Save NVIDIA Settings", type="primary", use_container_width=True, key="save_nvidia"):
+                    if not nvidia_model or not nvidia_model.strip():
+                        st.error("Please enter a model ID")
+                    else:
+                        payload = {"llm_provider": "nvidia", "llm": "nvidia", "nvidia_model": nvidia_model.strip()}
+                        if nvidia_key:
+                            payload["nvidia_api_key"] = nvidia_key
+                        result = update_llm_settings(payload)
+                        if result.get("success"):
+                            st.success(f"Saved: {nvidia_model}")
+                        else:
+                            st.error(result.get("error", "Failed"))
+            else:
+                openai_key = st.text_input(
+                    "OpenAI API Key",
+                    value="",
+                    type="password",
+                    placeholder="sk-xxx" if not llm_settings.get("api_key_set") else "****",
+                    key="openai_api_key"
+                )
+                api_name = st.text_input(
+                    "Model",
+                    value=llm_settings.get("api_name") or "gpt-4o-mini",
+                    placeholder="gpt-4o-mini, gpt-4o, etc.",
+                    key="openai_model"
+                )
+                if st.button("Save OpenAI Settings", type="primary", use_container_width=True, key="save_openai"):
+                    payload = {"llm_provider": "openai", "llm": "openai", "api_name": api_name}
+                    if openai_key:
+                        payload["api_key"] = openai_key
+                    result = update_llm_settings(payload)
+                    if result.get("success"):
+                        st.success("Saved. LLM reloaded.")
+                    else:
+                        st.error(result.get("error", "Failed"))
+            st.caption("Changes apply to single-machine mode. Flower mode may need server restart.")
+        else:
+            st.warning("API offline - cannot load settings")
         
         st.divider()
         

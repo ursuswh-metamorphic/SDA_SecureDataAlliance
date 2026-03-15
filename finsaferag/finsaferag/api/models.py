@@ -87,3 +87,27 @@ class ErrorResponse(BaseModel):
     error: str = Field(..., description="Error message")
     detail: Optional[str] = Field(None, description="Detailed error information")
     timestamp: str = Field(..., description="Error timestamp")
+
+
+class LLMSettingsUpdate(BaseModel):
+    """LLM settings update (partial updates supported)"""
+    llm_provider: Optional[str] = Field(None, description="openai | nvidia")
+    llm: Optional[str] = Field(None, description="Model identifier: nvidia, gpt-4o-mini, etc.")
+    api_key: Optional[str] = Field(None, description="OpenAI API key")
+    api_base: Optional[str] = Field(None, description="OpenAI API base URL")
+    api_name: Optional[str] = Field(None, description="OpenAI model name")
+    nvidia_api_key: Optional[str] = Field(None, description="NVIDIA API key")
+    nvidia_api_base: Optional[str] = Field(None, description="NVIDIA API base URL")
+    nvidia_model: Optional[str] = Field(None, description="NVIDIA model ID")
+
+
+class LLMSettingsResponse(BaseModel):
+    """LLM settings (API keys masked)"""
+    llm_provider: str = Field(..., description="Current provider")
+    llm: str = Field(..., description="Current model")
+    api_base: Optional[str] = None
+    api_name: Optional[str] = None
+    nvidia_api_base: Optional[str] = None
+    nvidia_model: Optional[str] = None
+    api_key_set: bool = Field(..., description="Whether OpenAI key is configured")
+    nvidia_api_key_set: bool = Field(..., description="Whether NVIDIA key is configured")

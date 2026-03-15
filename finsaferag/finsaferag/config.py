@@ -2,14 +2,24 @@ import os
 import toml
 
 
+def _config_path(config_file_path=None):
+    return config_file_path or os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.toml")
+
+
 class Config:
     _instance = None  # Singleton instance
+
+    @classmethod
+    def reload(cls, config_file_path=None):
+        """Clear singleton and force reload from file."""
+        cls._instance = None
+        return cls(config_file_path)
 
     def __new__(cls, config_file_path=None):
         if cls._instance is None:
             cls._instance = super(Config, cls).__new__(cls)
             if config_file_path is None:
-                config_file_path = os.path.join('./config.toml')
+                config_file_path = _config_path()
             cls._instance.config = toml.load(config_file_path)
 
             # 🔹 FIX: Set cả sections

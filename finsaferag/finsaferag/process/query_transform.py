@@ -1,13 +1,25 @@
 import os
+import logging
+
+logger = logging.getLogger(__name__)
+
 from llama_index.core.indices.query.query_transform import HyDEQueryTransform
 from llama_index.llms.openai import OpenAI
 from llama_index.core import PromptTemplate
 from llama_index.core.prompts.prompt_type import PromptType
 from llama_index.core.tools import QueryEngineTool, ToolMetadata
 from llama_index.core.query_engine import SubQuestionQueryEngine
-from llama_index.question_gen.openai import OpenAIQuestionGenerator
 from llama_index.core.schema import NodeWithScore, TextNode
 from llama_index.core import Settings
+
+# Handle import that may fail due to llama_index/workflows version mismatch
+try:
+    from llama_index.question_gen.openai import OpenAIQuestionGenerator
+    OPENAI_QUESTION_GEN_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"OpenAIQuestionGenerator not available: {e}. SubQuestion features disabled.")
+    OpenAIQuestionGenerator = None
+    OPENAI_QUESTION_GEN_AVAILABLE = False
 # from ..llms import llm
 
 # 定义模板字符串
@@ -290,6 +302,10 @@ def subquery_sync(query, prompt_template_str, query_engine):
         )
     ]
 
+    if not OPENAI_QUESTION_GEN_AVAILABLE:
+        logger.warning("SubQuestion query not available (missing OpenAIQuestionGenerator). Using direct query.")
+        return query_engine.query(query)
+    
     subquery_engine = CustomSubQuestionQueryEngine.from_defaults(
         query_engine_tools=query_engine_tools,
         use_async=False,
@@ -331,6 +347,10 @@ async def subquery(query, prompt_template_str, query_engine):
         )
     ]
 
+    if not OPENAI_QUESTION_GEN_AVAILABLE:
+        logger.warning("SubQuestion query not available (missing OpenAIQuestionGenerator). Using direct query.")
+        return await query_engine.aquery(query)
+    
     subquery_engine = CustomSubQuestionQueryEngine.from_defaults(
         query_engine_tools=query_engine_tools,
         use_async=True,

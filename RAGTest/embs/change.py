@@ -146,7 +146,7 @@ if __name__ == "__main__":
         print("Usage: python change.py <model_path_or_file> [output_dir] [base_model_name]")
         print("\nExamples:")
         print("  # Convert from .bin file:")
-        print("  python change.py ../FedE/x-model_2025-11-23_04-01-02.bin")
+        print("  python change.py ../FedE/x-model_2026-03-10_17-03-28_converted.bin")
         print("  # Convert from directory with .pt file:")
         print("  python change.py /path/to/model/directory")
         print("  # Specify output directory:")
