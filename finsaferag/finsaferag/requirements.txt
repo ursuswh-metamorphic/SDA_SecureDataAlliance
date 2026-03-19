@@ -128,6 +128,7 @@ llama-index-llms-dashscope==0.2.1
 llama-index-llms-huggingface==0.3.1
 llama-index-llms-ollama==0.3.0
 llama-index-llms-openai==0.2.16
+llama-index-llms-openai-like==0.2.0
 llama-index-multi-modal-llms-openai==0.2.3
 llama-index-postprocessor-cohere-rerank==0.2.1
 llama-index-postprocessor-colbert-rerank==0.2.1

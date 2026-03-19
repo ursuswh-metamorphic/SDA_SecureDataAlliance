@@ -1,0 +1,265 @@
+/root/miniconda3/envs/fedrag/lib/python3.11/site-packages/deepeval/__init__.py:41: UserWarning: You are using deepeval version 0.21.26, however version 3.9.1 is available. You should consider upgrading via the "pip install --upgrade deepeval" command.
+  warnings.warn(
+/root/miniconda3/envs/fedrag/lib/python3.11/site-packages/pydantic/_internal/_generate_schema.py:2249: UnsupportedFieldAttributeWarning: The 'validate_default' attribute with value True was provided to the `Field()` function, which has no effect in the context it was used. 'validate_default' is field-specific metadata, and can only be attached to a model field using `Annotated` metadata or by assignment. This may have happened because an `Annotated` type alias using the `type` statement was used, or if the `Field()` function was attached to a single member of a union type.
+  warnings.warn(
+/root/miniconda3/envs/fedrag/lib/python3.11/site-packages/lazy_loader/__init__.py:202: RuntimeWarning: subpackages can technically be lazily loaded, but it causes the package to be eagerly loaded even if it is already lazily loaded.So, you probably shouldn't use subpackages with this lazy feature.
+  warnings.warn(msg, RuntimeWarning)
+/root/miniconda3/envs/fedrag/lib/python3.11/site-packages/torch/cuda/__init__.py:54: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+
+DEBUG: Config loaded from config.toml
+DEBUG: config.privacy = {'enable_privacy_summary': True, 'presidio_language': 'en', 'presidio_entities': ['PERSON', 'PHONE_NUMBER', 'EMAIL_ADDRESS', 'CREDIT_CARD', 'LOCATION', 'US_SSN'], 'eraser_drop_high_risk': True, 'eraser_risk_threshold': 0.45, 'eraser_preserve_sentences': 1, 'eraser_keywords': ['password', 'secret', 'confidential', 'ssn', 'credit card', 'bank account', 'private'], 'tenseal_enabled': True, 'flower_enabled': True}
+DEBUG: config.enable_privacy_summary = True
+
+======================================================================
+ANALYZING TOP_K IMPACT ON METRICS
+======================================================================
+
+Using BGE embeddings to rank documents by similarity...
+  Ranked 10/50 queries
+  Ranked 20/50 queries
+  Ranked 30/50 queries
+  Ranked 40/50 queries
+  Ranked 50/50 queries
+
+✓ Ranked all 50 queries
+
+======================================================================
+EVALUATING AT DIFFERENT TOP_K VALUES
+======================================================================
+
+Evaluating top_k=1...
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+  F1: 62.0%, EM: 62.0%, Hit@1: 62.0%, MRR: 62.0%, NDCG: 62.0%
+Evaluating top_k=2...
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+  F1: 62.0%, EM: 62.0%, Hit@1: 70.0%, MRR: 66.0%, NDCG: 67.0%
+Evaluating top_k=3...
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 0.3333333333333333
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.3333333333333333
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.3333333333333333
+mrr: 1.0
+  F1: 62.0%, EM: 62.0%, Hit@1: 76.0%, MRR: 68.0%, NDCG: 70.0%
+Evaluating top_k=5...
+mrr: 0.2
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 0.3333333333333333
+mrr: 1.0
+mrr: 0.2
+mrr: 1.0
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.3333333333333333
+mrr: 1.0
+mrr: 0.25
+mrr: 0.5
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.3333333333333333
+mrr: 1.0
+  F1: 62.0%, EM: 62.0%, Hit@1: 82.0%, MRR: 69.3%, NDCG: 72.5%
+Evaluating top_k=10...
+mrr: 0.2
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 0.14285714285714285
+mrr: 0.3333333333333333
+mrr: 1.0
+mrr: 0.2
+mrr: 1.0
+mrr: 1.0
+mrr: 0.5
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.1111111111111111
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.3333333333333333
+mrr: 1.0
+mrr: 0.25
+mrr: 0.5
+mrr: 1.0
+mrr: 0.16666666666666666
+mrr: 0.5
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 1.0
+mrr: 0.3333333333333333
+mrr: 1.0
+  F1: 62.0%, EM: 62.0%, Hit@1: 88.0%, MRR: 70.1%, NDCG: 74.4%
+
+======================================================================
+RESULTS COMPARISON TABLE
+======================================================================
+
+top_k    F1           EM           Hit@1        MRR          NDCG        
+----------------------------------------------------------------------
+1             62.0%       62.0%       62.0%       62.0%       62.0%
+2             62.0%       62.0%       70.0%       66.0%       67.0%
+3             62.0%       62.0%       76.0%       68.0%       70.0%
+5             62.0%       62.0%       82.0%       69.3%       72.5%
+10            62.0%       62.0%       88.0%       70.1%       74.4%
+
+======================================================================
+ANALYSIS & RECOMMENDATIONS
+======================================================================
+
+Current (top_k=10):
+  F1:  62.0% (12%)
+  EM:  62.0%
+  MRR: 70.1%
+
+Best for F1 (top_k=1):
+  F1:  62.0%
+  EM:  62.0%
+  MRR: 62.0%
+  Improvement: +0%
+
+📋 RECOMMENDATION:
+   Use top_k=1 for maximum F1 score
+
+💡 WHY TOP_K MATTERS:
+   - With single expected document per query
+   - F1 = 1/(1+wrong_docs)
+   - Fewer retrieved docs = higher F1
+   - But: Too small top_k = might miss correct doc

@@ -16,10 +16,10 @@ from llama_index.vector_stores.faiss import FaissVectorStore
 from data.fedrag_data_loader import get_client_documents
 
 
-def get_index(node_id, persist_dir, split_type="sentence", chunk_size=1024):
+def get_index(node_id=None, persist_dir=None, split_type="sentence", chunk_size=1024, documents=None):
     """
-    Build hoặc load FAISS index cho một client (node_id).
-    Dữ liệu được lấy qua get_client_documents(node_id).
+    Build hoặc load FAISS index cho một client (node_id) hoặc từ documents được cung cấp.
+    Dữ liệu được lấy qua get_client_documents(node_id) nếu documents không được cung cấp.
     """
     hierarchical_storage_context = None
 
@@ -28,9 +28,10 @@ def get_index(node_id, persist_dir, split_type="sentence", chunk_size=1024):
     # ==============================
     if not os.path.exists(persist_dir):
 
-        # 1. Load document partition cho client tương ứng
-        documents = get_client_documents(node_id)
-
+        # 1. Load document partition cho client tương ứng hoặc sử dụng documents được cung cấp
+        if documents is None:
+            documents = get_client_documents(node_id)
+        
         # 2. Split thành nodes
         if split_type == "sentence":
             parser = SentenceSplitter(chunk_size=chunk_size, chunk_overlap=20)

@@ -1,0 +1,852 @@
+[
+    {
+        "key_content": {
+            "reference": [
+                "Fig. 5.63 Pelvic extensions of the prevertebral plexus. A. Anterior view. B. Anteromedial view of right side of plexus. L5S1S2S3S4Pelvic splanchnic nerves(parasympatheticsfrom S2 to S4)Sacral splanchnic nervesGray ramicommunicantesSympathetictrunkHypogastric nerveGanglionimparSuperior hypogastric plexusInferior hypogastricplexusPelvic parasympathetics ascendingSympathetics descendingA Fig. 5.64 Branches of the posterior trunk of the internal iliac artery. Fig. 5.65 Branches of the anterior trunk of the internal iliac artery. A. Male. B. Female. S1S2S3S4Median sacral artery (from aorta in abdomen)Internal iliac arteryAnterior trunk of internal iliac arteryDorsal artery of penisObturator arterySuperior vesical arteryInferior vesical arteryInferior gluteal arteryInternal pudendal arteryMiddle rectal artery Umbilical arteryA Fig. 5.66 Uterine and vaginal arteries."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_1183"
+            ],
+            "question": "From which sacral spinal segments do the pelvic splanchnic nerves (parasympathetic fibers) arise?",
+            "answer": "The pelvic splanchnic nerves arise from sacral spinal segments S2 to S4."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_1183",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "A. Folic acid B. Folic acid and vitamin B12 C. Iron D. Vitamin C Correct answer = A. Macrocytic anemia is seen with deficiencies of folic acid, vitamin B12, or both. Vitamin B12 is utilized in only two reactions in the body: the remethylation of homocysteine (Hcy) to methionine, which also requires folic acid (as tetrahydrofolate [THF]), and the isomerization of methylmalonyl coenzyme A to succinyl coenzyme A, which does not require THF. The elevated Hcy and normal methylmalonic acid levels in the patient’s blood reflect a deficiency of folic acid as the cause of the macrocytic anemia. Iron deficiency causes microcytic anemia, as can vitamin C deficiency."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1385"
+            ],
+            "question": "Based on the laboratory findings of elevated homocysteine and normal methylmalonic acid levels, which nutrient deficiency is responsible for the patient’s macrocytic anemia?",
+            "answer": "Folic acid"
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1385",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Internally, the cord has a small central canal surrounded by gray and white matter: The gray matter is rich in nerve cell bodies, which form longitudinal columns along the cord, and in cross section these columns form a characteristic H-shaped appearance in the central regions of the cord. The white matter surrounds the gray matter and is rich in nerve cell processes, which form large bundles or tracts that ascend and descend in the cord to other spinal cord levels or carry information to and from the brain."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_187"
+            ],
+            "question": "In a cross section of the spinal cord, what characteristic shape do the gray matter columns form?",
+            "answer": "They form a characteristic H-shaped appearance in the central regions of the cord."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_187",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The myelencephalon (medulla oblongata), the caudalmost part of the brainstem, ends at the foramen magnum or the uppermost rootlets of the first cervical nerve and to which cranial nerves VI to XII are attached. The brain receives its arterial supply from two pairs of vessels, the vertebral and internal carotid arteries (Fig. 8.38), which are interconnected in the cranial cavity to produce a cerebral arterial circle (of Willis). The two vertebral arteries enter the cranial cavity through the foramen magnum and just inferior to the pons fuse to form the basilar artery. The two internal carotid arteries enter the cranial cavity through the carotid canals on either side."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_2127"
+            ],
+            "question": "Through which opening do the vertebral arteries enter the cranial cavity?",
+            "answer": "Through the foramen magnum."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_2127",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "C. Cytosolic oxaloacetate decarboxylation OAA is decarboxylated and phosphorylated to PEP in the cytosol by PEPCK. The reaction is driven by hydrolysis of guanosine triphosphate ([GTP] see Fig. 10.3). The combined actions of PC and PEPCK provide an energetically favorable pathway from pyruvate to PEP. PEP is then acted on by the reactions of glycolysis running in the reverse direction until it becomes fructose 1,6-bisphosphate. The pairing of carboxylation with decarboxylation drives reactions that would otherwise be energetically unfavorable. This strategy is also used in fatty acid (FA) synthesis (see p. 184). D. Fructose 1,6-bisphosphate dephosphorylation"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_412"
+            ],
+            "question": "Which molecule's hydrolysis provides the energy for the cytosolic conversion of oxaloacetate to phosphoenolpyruvate by PEPCK?",
+            "answer": "The hydrolysis of guanosine triphosphate (GTP) drives the conversion."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_412",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Continuing posteriorly, the optic tracts course around the midbrain to enter the lateral geniculate nucleus of the thalamus (eFig. 9.75). At this level, a small portion of the fibers from the optic tract travel to the pretectal area and superior colliculus to mediate the pupillary light reflex. Axons leaving the lateral geniculate nucleus form the optic radiations, which continue on to the primary visual cortex in the occipital lobe (eFig. 9.76). Fibers traveling in the lower portion of the optic radiations terminate on the lower half of the primary visual cortex, whereas fibers in the upper portion terminate on the upper half of the cortex (eFig. 9.76). A full review of how the visual field is represented throughout the visual pathway can be reviewed in eFig. 9.77."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_2982"
+            ],
+            "question": "Which fibers in the visual pathway are responsible for mediating the pupillary light reflex?",
+            "answer": "A small portion of the fibers from the optic tract that travel to the pretectal area and superior colliculus mediate the pupillary light reflex."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_2982",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "A typical rib articulates with: the bodies of adjacent vertebrae, forming a joint with the head of the rib; and the transverse process of its related vertebra, forming a costotransverse joint (Fig. 3.24). Together, the costovertebral joints and related ligaments allow the necks of the ribs either to rotate around their longitudinal axes, which occurs mainly in the upper ribs, or to ascend and descend relative to the vertebral column, which occurs mainly in the lower ribs. The combined movements of all of the ribs on the vertebral column are essential for altering the volume of the thoracic cavity during breathing. Joint with head of rib"
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_322"
+            ],
+            "question": "According to the description, what are the two articulations a typical rib makes with the vertebrae, and which parts of the vertebrae are involved in each joint?",
+            "answer": "A typical rib forms a costovertebral joint with the bodies of adjacent vertebrae (where the head of the rib meets the vertebral bodies) and a costotransverse joint with the transverse process of its related vertebra."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_322",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Anteriorly, it attaches to a broad ridge and a tubercle on the inferior surface of the cuboid bone behind the groove for the fibularis longus tendon. More superficial fibers of the long plantar ligament extend to the bases of the metatarsal bones. The long plantar ligament supports the calcaneocuboid joint and is the strongest ligament, resisting depression of the lateral arch of the foot. The tarsometatarsal joints between the metatarsal bones and adjacent tarsal bones are plane joints and allow limited sliding movements (Fig. 6.109). The range of movement of the tarsometatarsal joint between the metatarsal of the great toe and the medial cuneiform is greater than that of the other tarsometatarsal joints and allows flexion, extension, and rotation. The tarsometatarsal joints, with the transverse tarsal joint, take part in pronation and supination of the foot."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_1491"
+            ],
+            "question": "Which tarsometatarsal joint has a greater range of movement than the others, and what movements does it allow?",
+            "answer": "The tarsometatarsal joint between the metatarsal of the great toe and the medial cuneiform has a greater range of movement, permitting flexion, extension, and rotation."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_1491",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Together the spinotransversales muscles draw the head backward, extending the neck. Individually, each muscle rotates the head to one side—the same side as the contracting muscle. The erector spinae is the largest group of intrinsic back muscles. The muscles lie posterolaterally to the vertebral column between the spinous processes medially and the angles of the ribs laterally. They are covered in the thoracic and lumbar regions by thoracolumbar fascia and the serratus posterior inferior, rhomboid, and splenius muscles. The mass arises from a broad, thick tendon attached to the sacrum, the spinous processes of the lumbar and lower thoracic vertebrae, and the iliac crest (Fig. 2.50 and Table 2.4). It divides in the upper lumbar region into three vertical columns of muscle, each of which is further subdivided regionally (lumborum, thoracis, cervicis, and capitis), depending on where the muscles attach superiorly."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_177"
+            ],
+            "question": "From which anatomical structures does the erector spinae mass originate?",
+            "answer": "It arises from a broad, thick tendon attached to the sacrum, the spinous processes of the lumbar and lower thoracic vertebrae, and the iliac crest."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_177",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Monosaccharides (simple sugars) can be classified according to the number of carbon atoms they contain. Examples of some monosaccharides commonly found in humans are listed in Figure 7.1. They can also be classified by the type of carbonyl group they contain. Carbohydrates with an aldehyde as their carbonyl group are called aldoses, whereas those with a keto as their carbonyl group are called ketoses (Fig. 7.2). For example, glyceraldehyde is an aldose, whereas dihydroxyacetone is a ketose. Carbohydrates that have a free carbonyl group have the suffix -ose. [Note: Ketoses have an additional “ul” in their suffix such as xylulose. There are exceptions, such as fructose, to this rule.] Monosaccharides can be linked by glycosidic bonds to create larger structures (Fig. 7.3). Disaccharides contain two monosaccharide units, oligosaccharides contain three to ten monosaccharide units, and polysaccharides contain more than ten monosaccharide units and can be hundreds of sugar units in length."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_282"
+            ],
+            "question": "According to the passage, what type of carbonyl group does glyceraldehyde have, and how is this carbohydrate classified?",
+            "answer": "Glyceraldehyde contains an aldehyde carbonyl group, so it is classified as an aldose."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_282",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The embolic material usually originates in the peripheral deep veins of the lower limbs and less commonly in the pelvic, renal, or upper limb deep veins. The material gets detached from the main thrombus in the deep veins and travels into the pulmonary circulation, where it can lodge either in the pulmonary trunk and main pulmonary arteries, giving rise to central pulmonary embolism or in the lobar, segmental, or subsegmental branches, giving rise to peripheral embolism. The gravity of symptoms is partly dependent on the thrombus load and on which part of the pulmonary arterial tree is affected. Large pulmonary embolisms can lead to severe hemodynamic and respiratory compromise and death (e.g., a saddle thrombus lodged in the pulmonary trunk and in both main pulmonary arteries). Common risk factors include immobilization, surgery, trauma, malignancy, pregnancy, oral contraceptives, and hereditary factors."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_563"
+            ],
+            "question": "What are the common risk factors for pulmonary embolism mentioned in the context?",
+            "answer": "Immobilization, surgery, trauma, malignancy, pregnancy, oral contraceptives, and hereditary factors."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_563",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "A. Definition The DRI consists of four dietary reference standards for the intake of nutrients designated for specific life stage (age) groups, physiologic states, and gender (Fig. 27.2). 1. Estimated average requirement: The average daily nutrient intake level estimated to meet the requirement of one half of the healthy individuals in a particular life stage and gender group is the Estimated Average Requirement (EAR). It is useful in estimating the actual requirements in groups and individuals. 2."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1250"
+            ],
+            "question": "According to the provided context, what does the abbreviation EAR stand for, and how is it defined in terms of nutrient intake and the population it serves?",
+            "answer": "EAR stands for Estimated Average Requirement. It is defined as the average daily nutrient intake level estimated to meet the requirement of one half of the healthy individuals in a particular life stage and gender group."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1250",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "III. GALACTOSE METABOLISM The major dietary source of galactose is lactose (galactosyl β-1,4-glucose) obtained from milk and milk products. [Note: The digestion of lactose by βgalactosidase (lactase) of the intestinal mucosal cell membrane was discussed on p. 87.] Some galactose can also be obtained by lysosomal degradation of glycoproteins and glycolipids. Like fructose (and mannose), the transport of galactose into cells is not insulin dependent. A. Phosphorylation Like fructose, galactose must be phosphorylated before it can be further metabolized. Most tissues have a specific enzyme for this purpose, galactokinase, which produces galactose 1-phosphate (Fig. 12.5). As with other kinases, ATP is the phosphate donor. B. Uridine diphosphate–galactose formation"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_479"
+            ],
+            "question": "Which enzyme phosphorylates galactose to form galactose 1‑phosphate in most tissues?",
+            "answer": "Galactokinase."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_479",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The microbiota in and on the human body plus their genomes are referred to as the microbiome. It is acquired at birth from the environment and changes with the life stages. The gut microbiome influences host nutrition by facilitating processing of food consumed and is itself influenced by that food. Its relationship with undernutrition, obesity, and diabetes is under investigation. 2. Children: As with infants, children have increased need for calories and nutrients. The primary concerns in this stage, however, are deficiencies of iron and calcium. 3. Adolescents: In the teen years, the increases in height and weight increase the need for calories, protein, calcium, iron, and phosphorus. Eating patterns in this stage can result in overconsumption of fat, sodium, and sugar and underconsumption of vitamin A, thiamine, and folic acid. [Note: Eating disorders and obesity are concerns in this age group.] B. Adulthood"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1305"
+            ],
+            "question": "According to the provided context, which nutrient deficiencies are the primary concerns for children?",
+            "answer": "The primary concerns for children are deficiencies of iron and calcium."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1305",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The posterior cruciate ligament attaches to the posterior aspect of the intercondylar area of the tibia and ascends anteriorly to attach to the medial wall of the intercondylar fossa of the femur. The anterior cruciate ligament crosses lateral to the posterior cruciate ligament as they pass through the intercondylar region. The anterior cruciate ligament prevents anterior displacement of the tibia relative to the femur and the posterior cruciate ligament restricts posterior displacement (Fig. 6.78). When standing, the knee joint is locked into position, thereby reducing the amount of muscle work needed to maintain the standing position (Fig. 6.79). One component of the locking mechanism is a change in the shape and size of the femoral surfaces that articulate with the tibia: In flexion, the surfaces are the curved and rounded areas on the posterior aspects of the femoral condyles."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_1420"
+            ],
+            "question": "According to the passage, what are the specific functions of the anterior cruciate ligament (ACL) and the posterior cruciate ligament (PCL) in relation to tibial movement?",
+            "answer": "The anterior cruciate ligament prevents anterior displacement of the tibia relative to the femur, while the posterior cruciate ligament restricts posterior displacement of the tibia relative to the femur."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_1420",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The family physician recommended surgical treatment, with a recommendation for surgery through an inguinal incision. A simple surgical technique divides the skin around the inguinal ligament. The aponeurosis of the external oblique muscle is divided in the anterior abdominal wall to display the spermatic cord. Careful inspection of the spermatic cord reveals the veins, which are surgically ligated. Another option is to embolize the varicocele. In this technique, a small catheter is placed via the right femoral vein. The catheter is advanced along the external iliac vein and the common iliac vein and into the inferior vena cava. The catheter is then positioned in the left renal vein, and a venogram is performed to demonstrate the origin of the left testicular vein. The catheter is advanced down the left testicular vein into the veins of the inguinal canal and the pampiniform plexus. Metal coils to occlude the vessels are injected, and the catheter is withdrawn."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_1246"
+            ],
+            "question": "What is the pathway of the catheter during the embolization procedure for a varicocele as described in the context?",
+            "answer": "The catheter is first placed via the right femoral vein, then advanced along the external iliac vein and the common iliac vein into the inferior vena cava. From there it is positioned in the left renal vein, a venogram is performed, and the catheter is further advanced down the left testicular vein into the veins of the inguinal canal and the pampiniform plexus before metal coils are injected to occlude the vessels."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_1246",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "sequence the human genome.] Advances in sequencing technology, so-called next generation, or high-throughput sequencing, now allow the rapid sequencing of an entire genome with increased fidelity and decreased cost through the simultaneous (parallel) sequencing of many DNA pieces. [Note: Sequencing of the exome, that portion of the genome that encodes proteins, is now possible.]"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1701"
+            ],
+            "question": "According to the passage, what type of sequencing technology enables rapid, high-fidelity, and cost‑effective sequencing of an entire genome by sequencing many DNA pieces in parallel?",
+            "answer": "Next generation, or high‑throughput sequencing, which performs simultaneous (parallel) sequencing of many DNA pieces."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1701",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The ilio-inguinal nerve emerges through the superficial inguinal ring, along with the spermatic cord, and provides cutaneous innervation to the upper medial thigh, the root of the penis, and the anterior surface of the scrotum in men, or the mons pubis and labium majus in women (Fig. 4.175). Throughout its course, it also supplies branches to the abdominal musculature. The genitofemoral nerve arises from the anterior rami of nerves L1 and L2 (Fig. 4.173). It passes downward in the substance of the psoas major muscle until it emerges on the anterior surface of the psoas major. It then descends on the surface of the muscle, in a retroperitoneal position, passing posterior to the ureter. It eventually divides into genital and femoral branches."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_793"
+            ],
+            "question": "From which spinal roots does the genitofemoral nerve arise, and what is its anatomical course relative to the psoas major muscle and ureter before it divides into its branches?",
+            "answer": "The genitofemoral nerve arises from the anterior rami of L1 and L2. It travels downward within the substance of the psoas major muscle, emerges on the anterior surface of the psoas major, then descends on the muscle’s surface in a retroperitoneal position, passing posterior to the ureter before dividing into genital and femoral branches."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_793",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "molecules: the A, P, and E sites that cover three neighboring codons. The A site binds an incoming aminoacyl-tRNA, the P site is occupied by peptidyl-tRNA, and the E site is occupied by the empty tRNA as it is about to exit the ribosome. Recognition of an mRNA codon is accomplished by the tRNA anticodon, which binds to the codon following the rules of complementarity and antiparallel binding. The wobble hypothesis states that the first (5′) base of the anticodon is not as spatially defined as the other two bases. Movement of that first base allows nontraditional base-pairing with the last (3′) base of the codon, thus allowing a single tRNA to recognize more than one codon for a specific amino acid. For initiation of protein synthesis, the components of the translation system are assembled, and mRNA associates with the small ribosomal subunit. The process requires initiation factors (IF). In prokaryotes, a purine-rich region of the mRNA (the Shine-Dalgarno sequence) base-pairs with a"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1607"
+            ],
+            "question": "According to the wobble hypothesis described in the context, which base of the tRNA anticodon is less spatially defined, and what functional advantage does this provide during codon recognition?",
+            "answer": "The first (5′) base of the anticodon is not as spatially defined as the other two bases. This flexibility allows it to form nontraditional base‑pairing with the last (3′) base of the codon, enabling a single tRNA to recognize more than one codon for a specific amino acid."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1607",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The cubital fossa lies anterior to the elbow joint and contains the biceps brachii tendon, the brachial artery, and the median nerve (Fig. 7.121). The base of the cubital fossa is an imaginary line between the readily palpable medial and lateral epicondyles of the humerus. The lateral and medial borders are formed by the brachioradialis and pronator teres muscles, respectively. The margin of the brachioradialis can be found by asking a subject to flex the semipronated forearm against resistance. The margin of the pronator teres can be estimated by an oblique line extending between the medial epicondyle and the midpoint along the length of the lateral surface of the forearm. The approximate apex of the cubital fossa is where this line meets the margin of the brachioradialis muscle."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_1916"
+            ],
+            "question": "Which muscles form the lateral and medial borders of the cubital fossa, and how can the margin of the brachioradialis be identified?",
+            "answer": "The lateral border of the cubital fossa is formed by the brachioradialis muscle, and the medial border is formed by the pronator teres muscle. The margin of the brachioradialis can be found by asking a subject to flex the semipronated forearm against resistance."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_1916",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The deep temporal nerves, usually two in number, originate from the anterior trunk of the mandibular nerve [V3] (Fig. 8.148; also see Fig. 8.144). They pass laterally above the lateral pterygoid muscle and curve around the infratemporal crest to ascend in the temporal fossa and supply the temporalis muscle from its deep surface. Nerve to lateral pterygoid The nerve to the lateral pterygoid may originate directly as a branch from the anterior trunk of the mandibular nerve [V3] or from its buccal branch (Fig. 8.148). From its origin, it passes directly into the deep surface of the lateral pterygoid muscle. The auriculotemporal nerve is the first branch of the posterior trunk of the mandibular nerve [V3] and originates as two roots, which pass posteriorly around the middle meningeal artery ascending from the maxillary artery to the foramen spinosum (Fig. 8.149)."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_2351"
+            ],
+            "question": "How many deep temporal nerves are usually present, and from which trunk of the mandibular nerve do they originate?",
+            "answer": "Usually two deep temporal nerves are present, and they originate from the anterior trunk of the mandibular nerve (V3)."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_2351",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The ethmoidal cells receive their blood supply through branches of the anterior and posterior ethmoidal arteries. The maxillary sinuses, one on each side, are the largest of the paranasal sinuses and completely fill the bodies of the maxillae (Fig. 8.235A,B). Each is pyramidal in shape with the apex directed laterally and the base deep to the lateral wall of the adjacent nasal cavity. The medial wall or base of the maxillary sinus is formed by the maxilla, and by parts of the inferior concha and palatine bone that overlie the maxillary hiatus. The opening of the maxillary sinus is near the top of the base, in the center of the semilunar hiatus, which grooves the lateral wall of the middle nasal meatus. Relationships of the maxillary sinus are as follows: The superolateral surface (roof) is related above to the orbit. The anterolateral surface is related below to the roots of the upper molar and premolar teeth and in front to the face."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_2554"
+            ],
+            "question": "Through which arteries do the ethmoidal cells receive their blood supply?",
+            "answer": "The ethmoidal cells receive their blood supply through branches of the anterior and posterior ethmoidal arteries."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_2554",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "In the clinic The “H-test” A simple “formula” for remembering the nerves that innervate the extraocular muscles is “LR6SO4 and all the rest are 3” (lateral rectus [VI], superior oblique [IV], all the rest including levator palpebrae superioris are [III]). The function of all extrinsic muscles and their nerves [III, IV, VI] that move the eyeball in both orbits can all easily be tested at the same time by having the patient track, without moving his or her head, an object such as the tip of a pen or a finger moved in an “H” pattern—starting from the midline between the two eyes (Fig. 8.98). In the clinic Intraocular pressure will rise if the normal cycle of aqueous humor fluid production and absorption is disturbed so that the amount of fluid increases. This condition is glaucoma and can lead to a variety of visual problems including blindness, which results from compression of the retina and its blood supply. In the clinic"
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_2821"
+            ],
+            "question": "According to the H‑test mnemonic described in the clinic, which cranial nerves supply the lateral rectus and the superior oblique muscles, and which nerve supplies all the remaining extraocular muscles including the levator palpebrae superioris?",
+            "answer": "The lateral rectus is innervated by cranial nerve VI, the superior oblique by cranial nerve IV, and all the other extraocular muscles—including the levator palpebrae superioris—are innervated by cranial nerve III."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_2821",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "3.3. A 39-year-old woman is brought to the emergency room complaining of weakness and dizziness. She recalls getting up early that morning to do her weekly errands and had skipped breakfast. She drank a cup of coffee for lunch and had nothing to eat during the day. She met with friends at 8 p.m. and had a few drinks. As the evening progressed, she soon became weak and dizzy and was taken to the hospital. Laboratory tests revealed her blood glucose to be 45 mg/dl (normal = 70–99). She was given orange juice and immediately felt better. The biochemical basis of her alcohol-induced hypoglycemia is an increase in: A. fatty acid oxidation. B. the ratio of the reduced oxidized forms of nicotinamide adenine dinucleotide. C. oxaloacetate and pyruvate. D. use of acetyl coenzyme A in fatty acid synthesis."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1112"
+            ],
+            "question": "In the case of the 39‑year‑old woman who developed hypoglycemia after drinking alcohol, the biochemical basis of her alcohol‑induced hypoglycemia is an increase in which of the following?",
+            "answer": "B. the ratio of the reduced to oxidized forms of nicotinamide adenine dinucleotide (NADH/NAD⁺)."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1112",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "G6PD deficiency is a hereditary condition characterized by hemolytic anemia caused by the inability to detoxify oxidizing agents. G6PD deficiency is the most common disease-producing enzyme abnormality in humans, affecting >400 million individuals worldwide. This deficiency has the highest prevalence in the Middle East, tropical Africa and Asia, and parts of the Mediterranean. G6PD deficiency is X linked and is, in fact, a family of deficiencies caused by a number of different mutations in the gene encoding G6PD. Only some of the resulting protein variants cause clinical symptoms. [Note: In addition to hemolytic anemia, a clinical manifestation of G6PD deficiency is neonatal jaundice appearing 1–4 days after birth. The jaundice, which may be severe, typically results from increased production of unconjugated bilirubin (see p. 285).] The life span of individuals with a severe form of G6PD deficiency may be somewhat shortened as a result of complications arising from chronic hemolysis."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_523"
+            ],
+            "question": "What is the inheritance pattern of G6PD deficiency?",
+            "answer": "G6PD deficiency is X linked."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_523",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "F. Bile salt deficiency: Cholelithiasis"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_784"
+            ],
+            "question": "What medical condition is linked to bile salt deficiency according to the provided context?",
+            "answer": "Cholelithiasis"
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_784",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Fate of fatty acids: The FFA move through the cell membrane of the adipocyte and bind to serum albumin. They are transported to tissues such as muscle, enter cells, get activated to their CoA derivatives, and are oxidized for energy in mitochondria. Regardless of their levels, plasma FFA cannot be used for fuel by red blood cells (RBC), which have no mitochondria. The brain does not use fatty acids for energy to any appreciable extent, but the reasons are less clear. [Note: Over 50% of the fatty acids released from adipose TAG are reesterified to glycerol 3phosphate. WAT does not express glycerol kinase, and the glycerol 3phosphate is produced by glyceroneogenesis, an incomplete version of gluconeogenesis: pyruvate to OAA via pyruvate carboxylase and OAA to phosphoenolpyruvate (PEP) via phosphoenolpyruvate carboxykinase. The PEP is converted (by reactions common to glycolysis and gluconeogenesis) to DHAP, which is reduced to glycerol 3-phosphate. The process decreases plasma FFA,"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_654"
+            ],
+            "question": "Why are plasma free fatty acids (FFA) unable to serve as a fuel source for red blood cells (RBC)?",
+            "answer": "Plasma FFA cannot be used for fuel by red blood cells because RBC lack mitochondria, which are required for fatty acid oxidation."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_654",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "E. It is an easily treated disorder with low mortality. F. It is treated by administering surfactant to the mother just before she gives birth. Correct answer = D. Dipalmitoylphosphatidylcholine (DPPC or, dipalmitoyl lecithin) is the lung surfactant found in mature, healthy lungs. Respiratory distress syndrome (RDS) can occur in lungs that make too little of this compound. If the lecithin/sphingomyelin (L/S) ratio in amniotic fluid is ≥2, a newborn’s lungs are considered to be sufficiently mature (premature lungs would be expected to have a ratio <2). The RDS would not be due to too few type II pneumocytes, which would simply be secreting sphingomyelin rather than DPPC at 28 weeks’ gestation. The mother is given a glucocorticoid, not surfactant, prior to giving birth (antenatally). Surfactant would be administered to the baby postnatally to reduce surface tension."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_756"
+            ],
+            "question": "According to the passage, what does an amniotic fluid lecithin/sphingomyelin (L/S) ratio of ≥2 indicate about a newborn's lung maturity?",
+            "answer": "An L/S ratio of ≥2 indicates that the newborn’s lungs are considered sufficiently mature."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_756",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "In the long term, muscle paralysis will produce secondary muscle wasting and overall atrophy of the region due to disuse. In the clinic Muscle atrophy is a wasting disorder of muscle. It can be produced by a variety of causes, which include nerve damage to the muscle and disuse. Muscle atrophy is an important problem in patients who have undergone long-term rest or disuse, requiring extensive rehabilitation and muscle building exercises to maintain normal activities of daily living. In the clinic Muscle injuries and strains tend to occur in specific muscle groups and usually are related to a sudden exertion and muscle disruption. They typically occur in athletes."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_120"
+            ],
+            "question": "According to the context, what are two primary causes of muscle atrophy?",
+            "answer": "The two primary causes of muscle atrophy mentioned are nerve damage to the muscle and disuse."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_120",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Most clinicians use a sphygmomanometer and a stethoscope. The sphygmomanometer is a device that inflates a cuff around the midportion of the arm to compress the brachial artery against the humerus. The cuff is inflated so it exceeds the systolic blood pressure (greater than 120 mm Hg). The clinician places a stethoscope over the brachial artery in the cubital fossa and listens (auscultates) for the pulse. As the pressure in the arm cuff of the sphygmomanometer is reduced just below the level of the systolic blood pressure, the pulse becomes audible as a regular thumping sound. As the pressure in the sphygmomanometer continues to drop, the regular thumping sound becomes clearer. When the pressure in the sphygmomanometer is less than that of the diastolic blood pressure, the audible thumping sound becomes inaudible. Using the simple scale on the sphygmomanometer, the patient’s blood pressure can be determined. The normal range is 90–120/60–80 mm Hg (systolic blood pressure/diastolic"
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_1991"
+            ],
+            "question": "According to the passage, what is the normal range for systolic and diastolic blood pressure?",
+            "answer": "The normal range is 90–120 mm Hg for systolic pressure and 60–80 mm Hg for diastolic pressure (90–120/60–80 mm Hg)."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_1991",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "C. Gonadal steroid hormones The testes and ovaries (gonads) synthesize hormones necessary for sexual differentiation and reproduction. A single hypothalamic-releasing factor, gonadotropin-releasing hormone, stimulates the anterior pituitary to release the glycoproteins luteinizing hormone (LH) and follicle-stimulating hormone (FSH). Like ACTH, LH and FSH bind to surface receptors and cause an increase in cAMP. LH stimulates the testes to produce testosterone and the ovaries to produce estrogens and progesterone (see Fig. 18.27). FSH regulates the growth of ovarian follicles and stimulates testicular spermatogenesis. D. Mechanism"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_827"
+            ],
+            "question": "What second messenger is increased when LH and FSH bind to their surface receptors?",
+            "answer": "cAMP"
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_827",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Case 10: Swollen, Painful Calf with Deep Venous Thrombosis Answer = D. Thrombin, a serine protease, is activated by the prothrombinase complex of factor (F)Xa + FVa. Once formed, activated thrombin (FIIa) proteolytically activates components of the extrinsic (FVII) and intrinsic (FXI, FVIII) pathways, generating FXa. Thrombin can also activate FV, FI, and FXIII of the common pathway (see figure below). Hemophilia A is caused by a deficiency in FVIII. FIX deficiency results in hemophilia B. FIII, also known as tissue factor (TF), is a transmembrane glycoprotein of the vascular endothelium. It functions as an accessory protein and not a protease. Formation of the platelet plug is primary hemostasis, and formation of the fibrin meshwork is secondary hemostasis. Vitamin K is required for the activation (γ-carboxylation) of FII, FVII, FIX, and FX (proteases that require calcium [Ca2+] and phospholipids [PL]) but not for FI (fibrinogen)."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1970"
+            ],
+            "question": "Which clotting factors require vitamin K for their activation (γ‑carboxylation) according to the passage?",
+            "answer": "Vitamin K is required for the activation (γ‑carboxylation) of factors II (FII), VII (FVII), IX (FIX), and X (FX), but not for fibrinogen (FI)."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1970",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "When only glucose is available: In this case, the lac operon is repressed (turned off). Repression is mediated by the repressor protein binding via a helix-turn-helix motif (Fig. 33.5) to the O site, which is downstream of the promoter (see Fig. 33.4A). Binding of the repressor interferes with the binding of RNA pol to the promoter, thereby inhibiting transcription of the structural genes. This is an example of negative regulation. 2."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1632"
+            ],
+            "question": "How is the lac operon regulated when only glucose is available, and what molecular mechanism causes its repression?",
+            "answer": "When only glucose is available, the lac operon is repressed (turned off). Repression occurs because the repressor protein binds to the O site downstream of the promoter using a helix‑turn‑helix motif. This binding blocks RNA polymerase from attaching to the promoter, thereby inhibiting transcription of the structural genes. This process exemplifies negative regulation."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1632",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Pleura that reflects from the medial wall and onto the surface of the lung is visceral pleura (Fig. 3.37), which adheres to and covers the lung. Each pleural cavity is the potential space enclosed between the visceral and parietal pleurae. They normally contain only a very thin layer of serous fluid. As a result, the surface of the lung, which is covered by visceral pleura, directly opposes and freely slides over the parietal pleura attached to the wall. The names given to the parietal pleura correspond to the parts of the wall with which they are associated (Fig. 3.38): Pleura related to the ribs and intercostal spaces is termed the costal part. Pleura covering the diaphragm is the diaphragmatic part. Pleura covering the mediastinum is the mediastinal part. The dome-shaped layer of parietal pleura lining the cervical extension of the pleural cavity is cervical pleura (dome of pleura or pleural cupola)."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_351"
+            ],
+            "question": "What is the name of the dome-shaped layer of parietal pleura that lines the cervical extension of the pleural cavity?",
+            "answer": "Cervical pleura (also called the dome of pleura or pleural cupola)."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_351",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Other structures outside the posterior attachments of the diaphragm lateral to the aortic hiatus include the sympathetic trunks. The greater, lesser, and least splanchnic nerves penetrate the crura. The arterial supply to the diaphragm is from vessels that arise superiorly and inferiorly to it (see Fig. 3.34). From above, pericardiacophrenic and musculophrenic arteries supply the diaphragm. These vessels are branches of the internal thoracic arteries. Superior phrenic arteries, which arise directly from lower parts of the thoracic aorta, and small branches from intercostal arteries contribute to the supply. The largest arteries supplying the diaphragm arise from below it. These arteries are the inferior phrenic arteries, which branch directly from the abdominal aorta."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_346"
+            ],
+            "question": "Which arteries provide the largest blood supply to the diaphragm, and from which major vessel do they arise?",
+            "answer": "The inferior phrenic arteries are the largest arteries supplying the diaphragm, and they branch directly from the abdominal aorta."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_346",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "476) likely influence the risk for obesity. IV. MOLECULAR INFLUENCES The cause of obesity can be summarized in a deceptively simple application of the first law of thermodynamics: Obesity results when energy (caloric) intake exceeds energy expenditure. However, the mechanism underlying this imbalance involves a complex interaction of biochemical, neurologic, environmental, and psychologic factors. The basic neural and humoral pathways that regulate appetite, energy expenditure, and body weight involve systems that regulate short-term food intake (meal to meal), and signals for the long-term (day to day, week to week, year to year) regulation of body weight (Fig. 26.7). and overnourished (B) states. CCK = cholecystokinin; PYY = peptide YY. A. Long-term signals reflect the status of fat (TAG) stores. 1."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1228"
+            ],
+            "question": "According to the passage, what fundamental principle explains the cause of obesity, and what do long‑term signals reflect?",
+            "answer": "The passage states that obesity can be explained by the first law of thermodynamics: it occurs when energy (caloric) intake exceeds energy expenditure. It also notes that long‑term signals reflect the status of fat (triacylglycerol, TAG) stores."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1228",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "3. Equilibrium: For most transamination reactions, the equilibrium constant is near 1. This allows the reaction to function in both amino acid degradation through removal of α-amino groups (for example, after consumption of a protein-rich meal) and biosynthesis of nonessential amino acids through addition of amino groups to the carbon skeletons of α-keto acids (for example, when the supply of amino acids from the diet is not adequate to meet the synthetic needs of cells). 4."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_874"
+            ],
+            "question": "What is the typical equilibrium constant for most transamination reactions, and how does this value affect the directionality of these reactions in amino acid metabolism?",
+            "answer": "For most transamination reactions, the equilibrium constant is near 1. This near‑unity value allows the reaction to operate in both directions: it can remove α‑amino groups during amino acid degradation (such as after a protein‑rich meal) and add amino groups to α‑keto acids for the biosynthesis of nonessential amino acids when dietary amino acids are insufficient."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_874",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The collection of lumbar and sacral nerve roots beyond the conus medullaris has a horsetail-like appearance, from which it derives its name “cauda equina.” Compression of the cauda equina may be caused by a herniating disc (as in this case), fracture fragments following traumatic injury, tumor, abscess, or severe degenerative stenosis of the central canal. Cauda equina syndrome is classed as a surgical emergency to prevent permanent and irreversible damage to the compressed nerve roots. A 45-year-old man was involved in a serious car accident. On examination he had a severe injury to the cervical region of his vertebral column with damage to the spinal cord. In fact, his breathing became erratic and stopped."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_264"
+            ],
+            "question": "According to the passage, what are the possible causes of compression of the cauda equina?",
+            "answer": "Compression of the cauda equina may be caused by a herniating disc, fracture fragments following traumatic injury, tumor, abscess, or severe degenerative stenosis of the central canal."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_264",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The arterial supply to the eyeball is from several sources: The short posterior ciliary arteries are branches from the ophthalmic artery that pierce the sclera around the optic nerve and enter the choroid layer (Fig. 8.108). The long posterior ciliary arteries, usually two, enter the sclera on the medial and lateral sides of the optic nerve and proceed anteriorly in the choroid layer to anastomose with the anterior ciliary arteries. The anterior ciliary arteries are branches of the arteries supplying the muscles (Fig. 8.108)—as the muscles attach to the sclera, these arteries pierce the sclera to anastomose with the long posterior ciliary arteries in the choroid layer. The central retinal artery that has traversed the optic nerve and enters the area of the retina at the optic disc."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_2264"
+            ],
+            "question": "From which main artery do the short posterior ciliary arteries arise, and where do they enter the eye?",
+            "answer": "The short posterior ciliary arteries are branches of the ophthalmic artery; they pierce the sclera around the optic nerve and enter the choroid layer."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_2264",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "to ribose 5-phosphate, required for nucleotide and nucleic acid synthesis, or to fructose 6-phosphate and glyceraldehyde 3-phosphate (glycolytic intermediates). NADPH is a source of reducing equivalents in reductive biosynthesis, such as the production of fatty acids in liver, adipose tissue, and the mammary gland; cholesterol in the liver; and steroid hormones in the placenta, ovaries, testes, and adrenal cortex. It is also required by red blood cells (RBC) for hydrogen peroxide reduction. Reduced glutathione (G-SH) is used by glutathione peroxidase to reduce the peroxide to water. The oxidized glutathione (G-S-S-G) produced is reduced by glutathione reductase, using NADPH as the source of electrons. NADPH provides reducing equivalents for the mitochondrial cytochrome P450 monooxygenase system, which is used in steroid hormone synthesis in steroidogenic tissue, bile acid synthesis in the liver, and vitamin D activation in the liver and kidneys. The microsomal system uses NADPH to"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_534"
+            ],
+            "question": "According to the passage, which tissues require NADPH for the synthesis of steroid hormones?",
+            "answer": "Placenta, ovaries, testes, and adrenal cortex."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_534",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "2. Favism Some forms of G6PD deficiency, for example, the Mediterranean variant, are particularly susceptible to the hemolytic effect of the fava (broad) bean, a dietary staple in the Mediterranean region. Favism, the hemolytic effect of ingesting fava beans, is not observed in all individuals with G6PD deficiency, but all patients with favism have G6PD deficiency. 3. Infection Infection is the most common precipitating factor of hemolysis in G6PD deficiency. The inflammatory response to infection results in the generation of free radicals in macrophages. The radicals can diffuse into the RBC and cause oxidative damage. C. Variant G6PD properties"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_529"
+            ],
+            "question": "According to the passage, does every person with G6PD deficiency develop favism after eating fava beans?",
+            "answer": "No. Favism, the hemolytic reaction to fava beans, is not observed in all individuals with G6PD deficiency, although all patients who experience favism do have G6PD deficiency."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_529",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "The crura of the clitoris are attached, one on each side, to the ischiopubic rami. Each crus is formed by the attached part of the corpus cavernosum. Anteriorly, these erectile corpora detach from bone, curve posteroinferiorly, and unite to form the body of the clitoris. The body of the clitoris underlies the ridge of skin immediately anterior to the clitoral hood (prepuce). The glans clitoris is positioned at the end of the body of the clitoris. Identification of structures in the urogenital triangle of men In men, the urogenital triangle contains the root of the penis. The testes and associated structures, although they migrate into the scrotum from the abdomen, are generally evaluated with the penis during a physical examination."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_1164"
+            ],
+            "question": "To which bony structures are the crura of the clitoris attached?",
+            "answer": "The crura of the clitoris are attached to the ischiopubic rami."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_1164",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Anterior duodenal ulcers erode into the peritoneal cavity, causing peritonitis. This intense inflammatory reaction and the local ileus promote adhesion of the greater omentum, which attempts to seal off the perforation. The stomach and duodenum usually contain considerable amounts of gas, which enters the peritoneal cavity and can be observed on a chest radiograph of an erect patient as subdiaphragmatic gas. In most instances, treatment for the ulcer perforation is surgical. In the clinic Examination of the upper and lower It is often necessary to examine the esophagus, stomach, duodenum, proximal jejunum, and colon for disease. After taking an appropriate history and examining the patient, most physicians arrange a series of simple blood tests to look for bleeding, inflammation, and tumors. The next steps in the investigation assess the three components of any loop of bowel, namely, the lumen, the wall, and masses extrinsic to the bowel, which may compress or erode into it."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_868"
+            ],
+            "question": "According to the passage, which structure adheres to the site of a perforated anterior duodenal ulcer to help seal the perforation?",
+            "answer": "The greater omentum."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_868",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "A (PKA). Thus, in the presence of counterregulatory hormones, such as epinephrine and glucagon, ACC is phosphorylated and inactive (Fig. 16.8). In the presence of insulin, ACC is dephosphorylated and active. [Note: This is analogous to the regulation of glycogen synthase (see p. 131).] itself is regulated both covalently and allosterically. CoA = coenzyme A; ADP phosphate."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_635"
+            ],
+            "question": "In the presence of which hormones is acetyl‑CoA carboxylase (ACC) phosphorylated and inactive?",
+            "answer": "ACC is phosphorylated and inactive in the presence of counterregulatory hormones such as epinephrine and glucagon."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_635",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "Examination of the nerves The three main nerves to the hand should be tested. The median nerve innervates the skin on the palmar aspect of the lateral three and one-half digits, the dorsal aspect of the distal phalanx, half of the middle phalanges of the same fingers, and a variable amount on the radial side of the palm of the hand. Median nerve damage results in wasting of the thenar eminence, absence of abduction of the thumb, and absence of opposition of the thumb. The ulnar nerve innervates the skin of the anterior and posterior surfaces of the little finger and the ulnar side of the ring finger, the skin over the hypothenar eminence, and a similar strip of skin posteriorly. Sometimes the ulnar nerve innervates all the skin of the ring finger and the ulnar side of the middle finger."
+            ],
+            "reference_idx": [
+                "Anatomy_Gray_2022"
+            ],
+            "question": "According to the examination of the nerves, damage to which nerve causes wasting of the thenar eminence, loss of thumb abduction, and loss of thumb opposition?",
+            "answer": "Median nerve damage."
+        },
+        "other_info": {
+            "doc_id": "Anatomy_Gray_2022",
+            "title": "Anatomy_Gray",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "A. α-Helix Several different polypeptide helices are found in nature, but the α-helix is the most common. It is a rigid, right-handed spiral structure, consisting of a tightly packed, coiled polypeptide backbone core, with the side chains of the component L-amino acids extending outward from the central axis to avoid interfering sterically with each other (Fig. 2.6). A very diverse group of proteins contains α-helices. For example, the keratins are a family of closely related, rigid, fibrous proteins whose structure is nearly entirely αhelical. They are a major component of tissues such as hair and skin. In contrast to keratin, myoglobin, whose structure is also highly α-helical, is a globular, flexible molecule (see p. 26) found in muscles. 1."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_47"
+            ],
+            "question": "What is the name of the rigid, right‑handed spiral polypeptide structure whose side chains extend outward, and which two proteins mentioned in the passage exemplify this structure—one being a fibrous protein in hair and skin and the other a globular protein in muscle?",
+            "answer": "The structure is the α‑helix. The fibrous protein example is keratin, which is found in hair and skin, and the globular protein example is myoglobin, which is found in muscles."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_47",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "B. Maple syrup urine disease Maple syrup urine disease (MSUD) is a rare (1:185,000), autosomalrecessive disorder in which there is a partial or complete deficiency in BCKD, the mitochondrial enzyme complex that oxidatively decarboxylates leucine, isoleucine, and valine (see Fig. 20.11). These BCAA and their corresponding α-keto acids accumulate in the blood, causing a toxic effect that interferes with brain functions. The disease is characterized by feeding problems, vomiting, ketoacidosis, changes in muscle tone, neurologic problems that can result in coma (primarily because of the rise in leucine), and a characteristic maple syrup–like odor of the urine because of the rise in isoleucine. If untreated, the disease is fatal. If treatment is delayed, intellectual disability results. 1."
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_953"
+            ],
+            "question": "Which mitochondrial enzyme complex is deficient in maple syrup urine disease, and which branched‑chain amino acids does it normally oxidatively decarboxylate?",
+            "answer": "The deficiency is in the branched‑chain α‑ketoacid dehydrogenase (BCKD) complex, which normally oxidatively decarboxylates the branched‑chain amino acids leucine, isoleucine, and valine."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_953",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "a peptide hormone released from pancreatic α cells in hypoglycemia, binds its plasma membrane G protein–coupled receptor on hepatocytes. The αs subunit of the associated trimeric G protein is activated (guanosine diphosphate is replaced by guanosine triphosphate), separates from the β and γ subunits, and activates adenylyl cyclase that generates cyclic adenosine monophosphate (cAMP) from ATP. cAMP activates protein kinase A (PKA) that phosphorylates and activates glycogen phosphorylase kinase, which phosphorylates and activates glycogen phosphorylase. The phosphorylase degrades glycogen, generating glucose 1-phosphate that is converted to glucose 6-phosphate. With glucose 6-phosphatase deficiency, the degradative process stops here (see figure below). Consequently, administration of glucagon is unable to cause a rise in blood glucose. [Note: Epinephrine would be similarly ineffective.]"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1879"
+            ],
+            "question": "Why does administration of glucagon fail to raise blood glucose levels in a patient with glucose‑6‑phosphatase deficiency?",
+            "answer": "Because glucose‑6‑phosphatase deficiency blocks the final step of glycogen breakdown: glucose‑6‑phosphate cannot be converted to free glucose. Although glucagon activates the signaling cascade (Gs → adenylyl cyclase → cAMP → PKA → glycogen phosphorylase), the degradative process stops at glucose‑6‑phosphate, so no glucose is released into the blood."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1879",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "or in the liver. Hepatic porphyrias can be further classified as chronic or acute. In general, individuals with an enzyme defect prior to the synthesis of the tetrapyrroles manifest abdominal and neuropsychiatric signs, whereas those with enzyme defects leading to the accumulation of tetrapyrrole intermediates show photosensitivity (that is, their skin itches and burns [pruritus] when exposed to sunlight). [Note: Photosensitivity is a result of the oxidation of colorless porphyrinogens to colored porphyrins, which are photosensitizing molecules thought to participate in the formation of superoxide radicals from oxygen. These radicals can oxidatively damage membranes and cause the release of destructive enzymes from lysosomes.] a. Chronic hepatic porphyria: Porphyria cutanea tarda, the most common porphyria, is a chronic disease of the liver. The disease is associated with severe deficiency of UROD, but clinical expression of the deficiency is influenced by various factors, such as"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_979"
+            ],
+            "question": "Which chronic hepatic porphyria is the most common, and which enzyme deficiency is it primarily associated with?",
+            "answer": "Porphyria cutanea tarda is the most common chronic hepatic porphyria, and it is primarily associated with a severe deficiency of the enzyme uroporphyrinogen decarboxylase (UROD)."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_979",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    },
+    {
+        "key_content": {
+            "reference": [
+                "2.5. What laboratory test would help in distinguishing an orotic aciduria caused by ornithine transcarbamylase deficiency from that caused by uridine monophosphate synthase deficiency? Blood ammonia level would be expected to be elevated in ornithine transcarbamylase deficiency that affects the urea cycle but not in uridine monophosphate synthase deficiency. UNIT V Integration of Metabolism Metabolic Effects of Insulin and Glucagon 23 For additional ancillary materials related to this chapter, please visit thePoint. I. OVERVIEW"
+            ],
+            "reference_idx": [
+                "Biochemistry_Lippincott_1072"
+            ],
+            "question": "Which laboratory test can be used to differentiate an orotic aciduria caused by ornithine transcarbamylase deficiency from one caused by uridine monophosphate synthase deficiency?",
+            "answer": "Measure the blood ammonia level; it will be elevated in ornithine transcarbamylase deficiency but not in uridine monophosphate synthase deficiency."
+        },
+        "other_info": {
+            "doc_id": "Biochemistry_Lippincott_1072",
+            "title": "Biochemistry_Lippinco",
+            "domain": "medical"
+        }
+    }
+]
