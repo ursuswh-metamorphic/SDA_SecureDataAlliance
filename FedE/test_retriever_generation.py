@@ -8,8 +8,10 @@ import sys
 import os
 import logging
 
-# Add paths
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'finsaferag'))
+# Add paths - ensure finsaferag package is importable
+finsaferag_path = os.path.join(os.path.dirname(__file__), '..', 'finsaferag')
+if finsaferag_path not in sys.path:
+    sys.path.insert(0, finsaferag_path)
 
 from generate_retriever_training_data import MedicalDatasetGenerator
 

@@ -21,8 +21,10 @@ from typing import List, Dict, Tuple
 import numpy as np
 from collections import defaultdict
 
-# Add parent paths for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'finsaferag'))
+# Add parent paths for imports - ensure finsaferag package is importable
+finsaferag_path = os.path.join(os.path.dirname(__file__), '..', 'finsaferag')
+if finsaferag_path not in sys.path:
+    sys.path.insert(0, finsaferag_path)
 
 from finsaferag.llms.llm import get_llm
 from finsaferag.config import Config

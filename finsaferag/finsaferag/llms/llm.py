@@ -1,10 +1,10 @@
 from llama_index.llms.openai import OpenAI
 from llama_index.llms.openai_like import OpenAILike
 
-from llms.huggingface_model import get_huggingfacellm
-from llms import chatglm4
-from embs import chatglmemb
-from config import Config
+from .huggingface_model import get_huggingfacellm
+from . import chatglm4
+from ..embs import chatglmemb
+from ..config import Config
 from llama_index.llms.ollama import Ollama
 import os
 import logging
