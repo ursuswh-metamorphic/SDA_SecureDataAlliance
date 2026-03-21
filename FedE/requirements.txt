@@ -8,3 +8,17 @@ prettytable
 ujson
 pyyaml
 pynvml
+numpy>=1.24.0
+
+# ── Differential Privacy ──────────────────────────────────────────────────────
+# Core DP accounting (no Opacus required — we implement RDP natively)
+# Optional: install for tighter PRV bounds and fast ghost clipping
+# opacus>=1.4.0                    # Per-sample DP-SGD (optional, production)
+# prv_accountant>=0.3.0            # Microsoft PRV (tightest bound, optional)
+# dp-accounting>=0.4.3             # Google dp-accounting (optional)
+# autodp>=0.2                      # Research-grade RDP composition (optional)
+
+# ── Evaluation ────────────────────────────────────────────────────────────────
+# deepeval>=0.20.0                 # LLM-as-judge metrics (faithfulness, relevancy)
+# rouge-score>=0.1.2               # ROUGE-L for text similarity
+

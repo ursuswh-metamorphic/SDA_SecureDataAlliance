@@ -59,7 +59,23 @@ import flgo.algorithm
 sample_list=['uniform', 'md', 'full', 'uniform_available', 'md_available', 'full_available'] # sampling options for the default sampling method in flgo.algorihtm.fedbase
 agg_list=['uniform', 'weighted_scale', 'weighted_com'] # aggregation options for the default aggregating method in flgo.algorihtm.fedbase
 optimizer_list=['SGD', 'Adam', 'RMSprop', 'Adagrad'] # supported optimizers
-default_option_dict = {'save_checkpoint':'', 'load_checkpoint':'','pretrain': '', 'sample': 'md', 'aggregate': 'uniform', 'num_rounds': 20, 'proportion': 0.2, 'learning_rate_decay': 0.998, 'lr_scheduler': -1, 'early_stop': -1, 'num_epochs': 5, 'num_steps': -1, 'learning_rate': 0.1, 'batch_size': 64.0, 'optimizer': 'SGD', 'clip_grad':0.0,'momentum': 0.0, 'weight_decay': 0.0, 'num_edge_rounds':5, 'algo_para': [], 'train_holdout': 0.1, 'test_holdout': 0.0, 'local_test':False,'seed': 0,'dataseed':0, 'gpu': [], 'server_with_cpu': False, 'num_parallels': 1, 'parallel_type':'t', 'num_workers': 0, 'pin_memory':False,'test_batch_size': 512,'pin_memory':False ,'simulator': 'default_simulator', 'availability': 'IDL', 'connectivity': 'IDL', 'completeness': 'IDL', 'responsiveness': 'IDL', 'logger': 'basic_logger', 'log_level': 'INFO', 'log_file': False, 'no_log_console': False, 'no_overwrite': False, 'eval_interval': 1, 'dp_enabled': False, 'dp_clip_norm': 1.0, 'dp_noise_multiplier': 0.1}
+default_option_dict = {'save_checkpoint':'', 'load_checkpoint':'','pretrain': '', 'sample': 'md', 'aggregate': 'uniform', 'num_rounds': 20, 'proportion': 0.2, 'learning_rate_decay': 0.998, 'lr_scheduler': -1, 'early_stop': -1, 'num_epochs': 5, 'num_steps': -1, 'learning_rate': 0.1, 'batch_size': 64.0, 'optimizer': 'SGD', 'clip_grad':0.0,'momentum': 0.0, 'weight_decay': 0.0, 'num_edge_rounds':5, 'algo_para': [], 'train_holdout': 0.1, 'test_holdout': 0.0, 'local_test':False,'seed': 0,'dataseed':0, 'gpu': [], 'server_with_cpu': False, 'num_parallels': 1, 'parallel_type':'t', 'num_workers': 0, 'pin_memory':False,'test_batch_size': 512,'pin_memory':False ,'simulator': 'default_simulator', 'availability': 'IDL', 'connectivity': 'IDL', 'completeness': 'IDL', 'responsiveness': 'IDL', 'logger': 'basic_logger', 'log_level': 'INFO', 'log_file': False, 'no_log_console': False, 'no_overwrite': False, 'eval_interval': 1, # ── Differential Privacy (DP-SGD / DP-FedAvg) ────────────────────────────────
+# Basic switch
+'dp_enabled': False,
+# Client per-sample DP-SGD params (Abadi et al. CCS 2016)
+'dp_clip_norm': 1.0,           # C: per-sample gradient clip norm
+'dp_noise_multiplier': 1.1,    # σ: FIXED from 0.1 → 1.1 (formal guarantee requires σ≥0.8)
+# Formal privacy budget (NEW — was completely absent before)
+'target_epsilon': 8.0,         # ε target (lower = stronger privacy; 3-8 recommended)
+'target_delta': 1e-5,          # δ target (must be << 1/N_clients)
+# Server-side user-level DP (McMahan et al. ICLR 2018)
+'server_clip_norm': 1.0,       # C_server: clip norm for full client update vectors
+'server_noise_multiplier': 1.1, # σ_server: calibrated via find_noise_multiplier()
+'dp_clients_per_round': -1,    # Number of clients per round (-1 = all; set < K for amplification)
+# Adaptive clipping (Andrew et al. NeurIPS 2021)
+'dp_adaptive_clip': True,      # Enable adaptive clip norm estimation
+'dp_clip_gamma': 0.5,          # Target quantile (0.5 = median of update norms)
+}
 
 if zmq is not None: _ctx = zmq.Context()
 else: _ctx = None
