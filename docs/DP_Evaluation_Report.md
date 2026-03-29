@@ -94,23 +94,27 @@ graph TD
 - **Companies:** 3 unique companies in test set
 - **Metrics:**
   - **Hit@k:** Exact match in top-k retrieved results
-  - **F1@k:** Harmonic mean of Precision@k and Recall@k (company-level relevance)
+  - **F1@k (Exact-Match):** Moi query chi co 1 document dung (r_i). Phu hop voi RAG — chi can tim dung 1 document tot nhat.
   - **NDCG@k:** Normalized Discounted Cumulative Gain
   - **MRR:** Mean Reciprocal Rank
   - **Cosine Similarity Gap:** Correct pairs vs incorrect pairs
 
-### Relevance Definition
+### Relevance Definition (Exact-Match)
 
 ```mermaid
 graph LR
-    Q["Query: q_i"] --> R1["r_i exact match = Relevant"]
-    Q --> R2["r_j same company = Relevant"]
-    Q --> R3["r_k different company = Not Relevant"]
+    Q["Query: q_i"] --> R1["r_i = Relevant<br/>CHI 1 doc dung"]
+    Q --> R2["r_j = Not Relevant"]
+    Q --> R3["r_k = Not Relevant"]
 
     style R1 fill:#4CAF50,color:#fff
-    style R2 fill:#8BC34A,color:#fff
+    style R2 fill:#f44336,color:#fff
     style R3 fill:#f44336,color:#fff
 ```
+
+> **Luu y:** Cach tinh F1 dung **exact-match** (1 doc relevant per query) thay vi company-level (tat ca docs cung company).
+> Ly do: Trong RAG, moi query chi can tim **1 document chinh xac nhat**, khong can tim tat ca documents lien quan.
+> Company-level F1 cho ket qua thap ao (F1@5 ~ 7%) vi Recall bi nen boi relevant set qua lon (~67 docs/company).
 
 ---
 
@@ -136,25 +140,28 @@ xychart-beta
     bar [60.0, 75.5, 82.0, 86.5]
 ```
 
-### 3.2 F1 Score @ k
+### 3.2 F1 Score @ k (Exact-Match)
 
 | Metric | Pretrained | Baseline | DP (eps=8) | DP (eps=20) | Retention eps=20 |
 |---|---|---|---|---|---|
-| **F1@1** | 2.80% | 2.80% | 1.02% | **2.13%** | 76.1% |
-| **F1@3** | 5.30% | 5.35% | 3.04% | **4.31%** | 80.6% |
-| **F1@5** | 7.36% | 7.42% | 5.07% | **6.33%** | **85.4%** |
-| **F1@10** | 12.44% | 12.54% | 9.30% | **11.04%** | **88.0%** |
+| **F1@1** | 84.50% | 84.50% | 4.50% | **60.00%** | **71.0%** |
+| **F1@3** | 48.80% | 48.80% | 4.20% | **37.80%** | **77.5%** |
+| **F1@5** | 32.80% | 32.80% | 3.70% | **27.30%** | **83.2%** |
+| **F1@10** | 18.00% | 18.00% | 2.80% | **15.70%** | **87.2%** |
 
 ```mermaid
 xychart-beta
-    title "F1@k Comparison (4 Models)"
+    title "Exact-Match F1@k Comparison (4 Models)"
     x-axis ["F1@1", "F1@3", "F1@5", "F1@10"]
-    y-axis "F1 Score (%)" 0 --> 15
-    bar [2.80, 5.30, 7.36, 12.44]
-    bar [2.80, 5.35, 7.42, 12.54]
-    bar [1.02, 3.04, 5.07, 9.30]
-    bar [2.13, 4.31, 6.33, 11.04]
+    y-axis "F1 Score (%)" 0 --> 90
+    bar [84.5, 48.8, 32.8, 18.0]
+    bar [84.5, 48.8, 32.8, 18.0]
+    bar [4.5, 4.2, 3.7, 2.8]
+    bar [60.0, 37.8, 27.3, 15.7]
 ```
+
+> **Giai thich F1@k giam khi k tang:** Voi exact-match (1 doc dung), khi k tang, Precision giam (1 doc dung / k results)
+> trong khi Recall = 100% (da tim duoc), nen F1 giam. Day la behavior binh thuong.
 
 ### 3.3 NDCG @ k
 
@@ -348,10 +355,10 @@ xychart-beta
 | Hit@3 (%) | 97.50 | 97.50 | 8.50 | **75.50** |
 | Hit@5 (%) | 98.50 | 98.50 | 11.00 | **82.00** |
 | Hit@10 (%) | 99.00 | 99.00 | 15.50 | **86.50** |
-| F1@1 (%) | 2.80 | 2.80 | 1.02 | **2.13** |
-| F1@3 (%) | 5.30 | 5.35 | 3.04 | **4.31** |
-| F1@5 (%) | 7.36 | 7.42 | 5.07 | **6.33** |
-| F1@10 (%) | 12.44 | 12.54 | 9.30 | **11.04** |
+| F1@1 — Exact-Match (%) | 84.50 | 84.50 | 4.50 | **60.00** |
+| F1@3 — Exact-Match (%) | 48.80 | 48.80 | 4.20 | **37.80** |
+| F1@5 — Exact-Match (%) | 32.80 | 32.80 | 3.70 | **27.30** |
+| F1@10 — Exact-Match (%) | 18.00 | 18.00 | 2.80 | **15.70** |
 | NDCG@5 | 0.879 | 0.879 | 0.788 | **0.864** |
 | NDCG@10 | 0.861 | 0.860 | 0.776 | **0.847** |
 | MRR | 0.911 | 0.911 | 0.092 | **0.697** |
@@ -366,18 +373,20 @@ xychart-beta
 |---|---|---|
 | **Hit@1** | 5.3% | **71.0%** |
 | **Hit@5** | 11.2% | **83.2%** |
-| **F1@5** | 68.4% | **85.4%** |
-| **F1@10** | 74.2% | **88.0%** |
+| **F1@1 (Exact-Match)** | 5.3% | **71.0%** |
+| **F1@3 (Exact-Match)** | 8.6% | **77.5%** |
+| **F1@5 (Exact-Match)** | 11.3% | **83.2%** |
+| **F1@10 (Exact-Match)** | 15.6% | **87.2%** |
 | **NDCG@5** | 89.6% | **98.3%** |
 | **MRR** | 10.1% | **76.5%** |
 
 ```mermaid
 xychart-beta
     title "Utility Retention: DP vs Baseline (%)"
-    x-axis ["Hit@1", "Hit@5", "F1@5", "F1@10", "NDCG@5", "MRR"]
+    x-axis ["Hit@1", "F1@1", "F1@5", "F1@10", "NDCG@5", "MRR"]
     y-axis "Retention (%)" 0 --> 100
-    bar [5.3, 11.2, 68.4, 74.2, 89.6, 10.1]
-    bar [71.0, 83.2, 85.4, 88.0, 98.3, 76.5]
+    bar [5.3, 5.3, 11.3, 15.6, 89.6, 10.1]
+    bar [71.0, 71.0, 83.2, 87.2, 98.3, 76.5]
 ```
 
 ### 6.3 Privacy-Utility Trade-off Analysis
@@ -403,17 +412,19 @@ xychart-beta
 |---|---|---|
 | **Privacy guarantee** | (8.0, 1e-5)-DP | (20.0, 1e-5)-DP |
 | **Hit@1** | 4.5% (unusable) | **60.0%** (acceptable) |
+| **F1@1 (Exact-Match)** | 4.5% | **60.0%** |
+| **F1@5 (Exact-Match) retention** | 11.3% | **83.2%** |
 | **NDCG@5 retention** | 89.6% | **98.3%** |
-| **F1@5 retention** | 68.4% | **85.4%** |
 | **Training overhead** | 4.2x | 4.2x |
 | **Recommendation** | Research only | **Production candidate** |
 
 ### 7.2 Key Takeaways
 
-1. **eps=20 la cau hinh khuyen nghi** cho production: giu 98.3% NDCG@5 va 71% Hit@1 voi formal DP guarantee
-2. **eps=8 qua strict** cho full-model fine-tuning 109M params: can DP-LoRA hoac model nho hon
+1. **eps=20 la cau hinh khuyen nghi** cho production: giu 98.3% NDCG@5, 83.2% F1@5 va 71% Hit@1 voi formal DP guarantee
+2. **eps=8 qua strict** cho full-model fine-tuning 109M params: F1@5 chi con 11.3% — can DP-LoRA hoac model nho hon
 3. **Baseline ~ Pretrained**: FedAvg voi lr=1e-5 va 25 rounds chua thay doi model dang ke
 4. **Training overhead 4.2x** chap nhan duoc (17min vs 72min tren RTX 3060)
+5. **Exact-Match F1** phu hop hon cho RAG evaluation vi moi query chi can tim 1 document chinh xac nhat
 
 ### 7.3 Future Improvements
 
