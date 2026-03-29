@@ -194,3 +194,4 @@ finsaferag/finsaferag/data/rag_corpus.json
 RAGTest/data/.ipynb_checkpoints/documents-checkpoint.json
 finsaferag/finsaferag/config.toml
 finsaferag/finsaferag/config.local.toml
+.claude/settings.local.json
