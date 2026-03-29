@@ -1,0 +1,112 @@
+2026-03-29 04:21:37,843 fflow.py init [line:657] INFO PROCESS ID:	3299
+2026-03-29 04:21:37,844 fflow.py init [line:658] INFO Initializing devices: cuda:0 will be used for this running.
+2026-03-29 04:21:37,844 fflow.py init [line:661] INFO BENCHMARK:	flgo.benchmark.fedrag_classification
+2026-03-29 04:21:37,844 fflow.py init [line:662] INFO TASK:			./num5_alpha05
+2026-03-29 04:21:37,844 fflow.py init [line:663] INFO MODEL:		flgo.benchmark.fedrag_classification.model.fedllm
+2026-03-29 04:21:37,844 fflow.py init [line:664] INFO ALGORITHM:	fedrag
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 4191.92it/s]
+[1mBertModel LOAD REPORT[0m from: BAAI/bge-base-en
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 4463.46it/s]
+[1mBertModel LOAD REPORT[0m from: BAAI/bge-base-en
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 4151.81it/s]
+[1mBertModel LOAD REPORT[0m from: BAAI/bge-base-en
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 3487.72it/s]
+[1mBertModel LOAD REPORT[0m from: BAAI/bge-base-en
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 3773.56it/s]
+[1mBertModel LOAD REPORT[0m from: BAAI/bge-base-en
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+2026-03-29 04:22:31,163 fflow.py init [line:703] INFO SCENE:		horizontal FL with 1 <class 'flgo.algorithm.fedrag.Server'>, 5 <class 'flgo.algorithm.fedrag.Client'>
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 3491.70it/s]
+[1mBertModel LOAD REPORT[0m from: BAAI/bge-base-en
+Key                     | Status     |  | 
+------------------------+------------+--+-
+embeddings.position_ids | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+2026-03-29 04:22:35,543 fflow.py init [line:720] INFO SIMULATOR:	<class 'flgo.simulator.default_simulator.Simulator'>
+2026-03-29 04:22:35,549 fflow.py init [line:733] INFO Ready to start.
+2026-03-29 04:22:35,550 fedrag.py run [line:20] INFO --------------Initial Evaluation--------------
+2026-03-29 04:22:35,550 fedrag.py run [line:23] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:06<00:26,  6.54s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:13<00:19,  6.62s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:21<00:15,  7.56s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:28<00:07,  7.34s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:46<00:00, 10.97s/it]                                                                          2026-03-29 04:23:21,928 fedrag.py run [line:31] INFO --------------Round 1--------------
+2026-03-29 04:23:21,929 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:12,  3.01s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:12,  4.33s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:14<00:10,  5.34s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:19<00:05,  5.10s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:34<00:00,  8.58s/it]                                                                          2026-03-29 04:23:59,367 fedrag.py run [line:31] INFO --------------Round 2--------------
+2026-03-29 04:23:59,367 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:12,  3.19s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:07<00:11,  3.99s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:10,  5.49s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:19<00:05,  5.22s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:35<00:00,  8.82s/it]                                                                          2026-03-29 04:24:37,433 fedrag.py run [line:31] INFO --------------Round 3--------------
+2026-03-29 04:24:37,434 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:14,  3.54s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:07<00:12,  4.07s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:14<00:10,  5.13s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.48s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:36<00:00,  9.18s/it]                                                                          2026-03-29 04:25:18,164 fedrag.py run [line:31] INFO --------------Round 4--------------
+2026-03-29 04:25:18,164 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:14,  3.59s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:12,  4.28s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:14<00:10,  5.34s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:19<00:05,  5.06s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:34<00:00,  8.66s/it]                                                                          2026-03-29 04:25:55,727 fedrag.py run [line:31] INFO --------------Round 5--------------
+2026-03-29 04:25:55,727 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:12,  3.10s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:07<00:12,  4.13s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:14<00:10,  5.32s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.39s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:36<00:00,  9.38s/it]                                                                          2026-03-29 04:26:35,963 fedrag.py run [line:31] INFO --------------Round 6--------------
+2026-03-29 04:26:35,964 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:13,  3.27s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:07<00:12,  4.11s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:14<00:10,  5.25s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:19<00:05,  5.10s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:35<00:00,  8.88s/it]                                                                          2026-03-29 04:27:15,393 fedrag.py run [line:31] INFO --------------Round 7--------------
+2026-03-29 04:27:15,393 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:15,  3.85s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:12,  4.22s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:11,  5.56s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.30s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:36<00:00,  9.10s/it]                                                                          2026-03-29 04:27:54,788 fedrag.py run [line:31] INFO --------------Round 8--------------
+2026-03-29 04:27:54,789 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:14,  3.65s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:13,  4.62s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:11,  5.64s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.36s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:37<00:00,  9.57s/it]                                                                          2026-03-29 04:28:35,959 fedrag.py run [line:31] INFO --------------Round 9--------------
+2026-03-29 04:28:35,960 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:13,  3.43s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:09<00:14,  4.71s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:11,  5.62s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.32s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:36<00:00,  9.05s/it]                                                                          2026-03-29 04:29:16,147 fedrag.py run [line:31] INFO --------------Round 10--------------
+2026-03-29 04:29:16,147 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:12,  3.18s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:13,  4.60s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:11,  5.59s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.23s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:36<00:00,  9.03s/it]                                                                          2026-03-29 04:29:55,934 fedrag.py run [line:31] INFO --------------Round 11--------------
+2026-03-29 04:29:55,935 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:14,  3.75s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:09<00:14,  4.69s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:16<00:11,  5.91s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:21<00:05,  5.55s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:36<00:00,  9.03s/it]                                                                          2026-03-29 04:30:35,775 fedrag.py run [line:31] INFO --------------Round 12--------------
+2026-03-29 04:30:35,776 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:14,  3.72s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:09<00:14,  4.82s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:16<00:11,  5.82s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:21<00:05,  5.40s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:36<00:00,  8.99s/it]                                                                          2026-03-29 04:31:15,269 fedrag.py run [line:31] INFO --------------Round 13--------------
+2026-03-29 04:31:15,269 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:13,  3.27s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:09<00:14,  4.78s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:11,  5.73s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.29s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:35<00:00,  8.70s/it]                                                                          2026-03-29 04:31:53,655 fedrag.py run [line:31] INFO --------------Round 14--------------
+2026-03-29 04:31:53,656 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:13,  3.50s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:13,  4.49s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:10,  5.50s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:21<00:05,  5.90s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:36<00:00,  8.97s/it]                                                                          2026-03-29 04:32:33,416 fedrag.py run [line:31] INFO --------------Round 15--------------
+2026-03-29 04:32:33,416 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:13,  3.28s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:13,  4.39s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:10,  5.38s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.30s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:35<00:00,  8.83s/it]                                                                          2026-03-29 04:33:11,870 fedrag.py run [line:31] INFO --------------Round 16--------------
+2026-03-29 04:33:11,870 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:13,  3.36s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:13,  4.39s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:10,  5.49s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:19<00:05,  5.17s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:34<00:00,  8.68s/it]                                                                          2026-03-29 04:33:50,235 fedrag.py run [line:31] INFO --------------Round 17--------------
+2026-03-29 04:33:50,236 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:15,  3.82s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:09<00:14,  4.70s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:16<00:11,  5.71s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.40s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:35<00:00,  8.65s/it]                                                                          2026-03-29 04:34:28,891 fedrag.py run [line:31] INFO --------------Round 18--------------
+2026-03-29 04:34:28,891 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:13,  3.44s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:13,  4.37s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:14<00:10,  5.35s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:19<00:05,  5.08s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:35<00:00,  8.93s/it]                                                                          2026-03-29 04:35:07,367 fedrag.py run [line:31] INFO --------------Round 19--------------
+2026-03-29 04:35:07,368 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:14,  3.60s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:13,  4.44s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:10,  5.42s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:19<00:05,  5.07s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:34<00:00,  8.60s/it]                                                                          2026-03-29 04:35:46,434 fedrag.py run [line:31] INFO --------------Round 20--------------
+2026-03-29 04:35:46,434 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:13,  3.37s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:14,  4.67s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:11,  5.57s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.23s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:36<00:00,  9.26s/it]                                                                          2026-03-29 04:36:26,270 fedrag.py run [line:31] INFO --------------Round 21--------------
+2026-03-29 04:36:26,272 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:08<00:35,  8.76s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:15<00:23,  7.84s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:26<00:18,  9.03s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:34<00:08,  8.82s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [01:01<00:00, 15.12s/it]                                                                          2026-03-29 04:37:43,769 fedrag.py run [line:31] INFO --------------Round 22--------------
+2026-03-29 04:37:43,769 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:12,  3.15s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:12,  4.31s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:15<00:10,  5.47s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:20<00:05,  5.30s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:35<00:00,  8.79s/it]                                                                          2026-03-29 04:38:21,880 fedrag.py run [line:31] INFO --------------Round 23--------------
+2026-03-29 04:38:21,880 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:12,  3.23s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:13,  4.37s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:14<00:10,  5.31s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:19<00:05,  5.01s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:34<00:00,  8.53s/it]                                                                          2026-03-29 04:38:58,895 fedrag.py run [line:31] INFO --------------Round 24--------------
+2026-03-29 04:38:58,896 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+Local Training on 5 Clients:   0%|          | 0/5 [00:00<?, ?it/s]Local Training on 5 Clients:  20%|██        | 1/5 [00:03<00:13,  3.28s/it]Local Training on 5 Clients:  40%|████      | 2/5 [00:08<00:12,  4.28s/it]Local Training on 5 Clients:  60%|██████    | 3/5 [00:14<00:10,  5.37s/it]Local Training on 5 Clients:  80%|████████  | 4/5 [00:19<00:05,  5.11s/it]Local Training on 5 Clients: 100%|██████████| 5/5 [00:34<00:00,  8.45s/it]                                                                          2026-03-29 04:39:35,724 fedrag.py run [line:31] INFO --------------Round 25--------------
+2026-03-29 04:39:35,724 fedrag.py run [line:36] INFO Eval Time Cost:               0.0000s
+2026-03-29 04:39:38,507 fedrag.py run [line:51] INFO =================End==================
+2026-03-29 04:39:38,507 fedrag.py run [line:52] INFO Total Time Cost:              1022.9574s

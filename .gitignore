@@ -177,6 +177,7 @@ cython_debug/
 
 x-model_2025-11-23_10-52-43_converted
 x-model_2026-03-10_17-03-28_converted
+x-model_baseline_converted
 __pycache__/
 *.pyc
 
