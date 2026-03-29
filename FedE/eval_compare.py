@@ -215,10 +215,10 @@ print('Loading pretrained model...')
 pretrained = BertModel.from_pretrained('BAAI/bge-base-en')
 
 print('Loading baseline model...')
-baseline = load_model('x-model_2026-03-21_05-20-48.bin', 'Baseline')
+baseline = load_model('x-model_2026-03-29_04-39-38.bin', 'Baseline')
 
 print('Loading DP model...')
-dp_model = load_model('x-model_2026-03-21_06-12-57.bin', 'DP')
+dp_model = load_model('x-model_2026-03-29_05-52-40.bin', 'DP')
 print()
 
 # ── Run evaluations ──────────────────────────────────────────────────────────
