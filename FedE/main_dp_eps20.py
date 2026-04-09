@@ -26,7 +26,7 @@ print(f'Verification: sigma={calibrated_sigma:.4f} -> eps={eps_check:.4f}')
 task = './num5_alpha05'
 config = {
     'benchmark': {'name': 'flgo.benchmark.fedrag_classification'},
-    'partitioner': {'name': 'IDPartitioner', 'para': {'num_clients': NUM_CLIENTS}},
+    'partitioner': {'name': 'IIDPartitioner', 'para': {'num_clients': NUM_CLIENTS}},
 }
 if not os.path.exists(task):
     flgo.gen_task(config, task_path=task)

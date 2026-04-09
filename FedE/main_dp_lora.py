@@ -48,7 +48,7 @@ print(f'Verification: eps={eps_check:.4f}')
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # ── Load data ──────────────────────────────────────────────────────────────
-with open('new_select_data.json', 'r', encoding='utf-8') as f:
+with open('pubmed_train.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
 client_data = [[] for _ in range(NUM_CLIENTS)]

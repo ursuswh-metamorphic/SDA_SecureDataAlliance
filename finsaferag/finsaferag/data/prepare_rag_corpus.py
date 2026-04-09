@@ -14,14 +14,14 @@ def _get_config_paths():
             base = base / data_dir
         return {
             "test_corpus": base / (getattr(cfg, "test_corpus_file", "test_corpus_backup.json") or "test_corpus_backup.json"),
-            "val_qa": base / (getattr(cfg, "val_qa_file", "data_50.json") or "data_50.json"),
+            "val_qa": base / (getattr(cfg, "val_qa_file", "test_retrieval.json") or "test_retrieval.json"),
             "out": base / (getattr(cfg, "corpus_file", "rag_corpus.json") or "rag_corpus.json"),
         }
     except Exception:
         base = Path(__file__).resolve().parent
         return {
             "test_corpus": base / "test_corpus_backup.json",
-            "val_qa": base / "data_50.json",
+            "val_qa": base / "test_retrieval.json",
             "out": base / "rag_corpus.json",
         }
 
@@ -35,7 +35,7 @@ def build_rag_corpus(
     """
     Gộp 2 file:
       - test_corpus_backup.json (hoặc test_corpus_file từ config)
-      - data_50.json (hoặc val_qa_file từ config)
+      - test_retrieval.json (hoặc val_qa_file từ config)
     thành 1 file JSON phẳng: [{"id", "title", "text"}, ...]
     để dùng với HuggingFace + Flower.
     Hỗ trợ multi-domain qua config: data_dir, corpus_file, val_qa_file, test_corpus_file.

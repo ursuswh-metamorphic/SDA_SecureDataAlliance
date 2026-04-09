@@ -24,7 +24,7 @@ def get_documents():
             break
     print("len(B):", len(documents))
     # with open("data/data_100.json", 'r', encoding='utf-8') as file:
-    with open("data/data_50.json", 'r', encoding='utf-8') as file:
+    with open("data/test_retrieval.json", 'r', encoding='utf-8') as file:
         data = json.load(file)
         for entry in data:
             title = entry["other_info"]["doc_name"]
