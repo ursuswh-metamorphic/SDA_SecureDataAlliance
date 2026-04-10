@@ -2,8 +2,8 @@
 
 > **Project:** FinSafeRAG — Privacy-Aware Federated Retrieval-Augmented Generation
 > **Branch:** `trang/differential_privacy`
-> **Date:** 2026-03-29
-> **Server:** Vast.ai — NVIDIA RTX 3060 12GB, 125GB RAM
+> **Date:** 2026-03-29 (Experiment 1), 2026-04-10 (Experiment 2)
+> **Server:** Vast.ai RTX 3060 12GB (Exp 1), DigitalOcean RTX 6000 Ada 48GB (Exp 2)
 
 ---
 
@@ -444,6 +444,125 @@ Cho paper Q1, khuyen nghi trinh bay:
 3. **eps=20** cho thay cau hinh thuc te kha thi
 4. **Privacy-utility curve** voi nhieu gia tri eps de minh hoa trade-off
 5. **So sanh voi SOTA:** C-FedRAG, DP-RAG papers 2024-2025
+
+---
+
+## 8. Experiment 2: PubMed Dataset (2026-04-10)
+
+### 8.1 Motivation
+
+Thay doi data tu `new_select_data.json` (20,016 records, 3 companies) sang `pubmed_train.json` (2,594 records, 1 company — PubMed medical QA) de danh gia tren domain medical thuan tuy. Dong thoi chuyen tu `IDPartitioner` sang `IIDPartitioner` de chia deu data giua cac clients.
+
+### 8.2 Training Configuration
+
+| Parameter | Baseline | DP (eps=8) | DP (eps=20) |
+|---|---|---|---|
+| **Data** | pubmed_train.json (2,594 records) | pubmed_train.json | pubmed_train.json |
+| **Partitioner** | IIDPartitioner | IIDPartitioner | IIDPartitioner |
+| **Steps/client** | 59 (deu) | 59 (deu) | 59 (deu) |
+| Algorithm | `fedrag.py` | `fedrag_dp.py` | `fedrag_dp.py` |
+| Model | BGE-base-en (109M) | BGE-base-en (109M) | BGE-base-en (109M) |
+| Rounds | 25 | 25 | 25 |
+| Clients | 5 | 5 | 5 |
+| Batch size | 8 | 8 | 8 |
+| Learning rate | 1e-5 | 1e-5 | 1e-5 |
+| Noise multiplier (sigma) | N/A (dp_enabled=False) | **1.6701** | **0.8118** |
+| Privacy guarantee | None | **(eps=8.0, delta=1e-5)-DP** | **(eps=20.0, delta=1e-5)-DP** |
+| **Training time** | **766s (~12.8 min)** | **5,369s (~89.5 min)** | **5,378s (~89.6 min)** |
+| **Server** | DigitalOcean RTX 6000 Ada 48GB | Same | Same |
+
+### 8.3 Results
+
+#### Retrieval Accuracy & Key Metrics
+
+| Metric | Pretrained | Baseline | DP (eps=20) | DP (eps=8) |
+|---|---|---|---|---|
+| **Hit@1 (%)** | 96.50 | 92.50 | **91.00** | 13.00 |
+| **Hit@3 (%)** | 98.00 | 93.50 | **96.50** | 20.50 |
+| **Hit@5 (%)** | 98.50 | 94.50 | **97.00** | 24.50 |
+| **Hit@10 (%)** | 98.50 | 96.50 | **97.50** | 33.50 |
+| **F1@1 (%)** | 1.00 | 1.00 | 1.00 | 1.00 |
+| **F1@3 (%)** | 2.96 | 2.96 | 2.96 | 2.96 |
+| **F1@5 (%)** | 4.88 | 4.88 | 4.88 | 4.88 |
+| **F1@10 (%)** | 9.52 | 9.52 | 9.52 | 9.52 |
+| **NDCG@5** | 1.0000 | 1.0000 | **1.0000** | 1.0000 |
+| **NDCG@10** | 1.0000 | 1.0000 | **1.0000** | 1.0000 |
+| **MRR** | 0.9726 | 0.9364 | **0.9349** | 0.2025 |
+| **Sim (correct)** | 0.9151 | 0.8171 | 0.9595 | 0.8464 |
+| **Sim (incorrect)** | 0.7440 | 0.5494 | 0.8849 | 0.8057 |
+| **Sim Gap** | 0.1711 | 0.2677 | 0.0746 | 0.0406 |
+
+> **Luu y F1@k thap:** Do PubMed data chi co 1 company, tat ca 200 test docs deu thuoc cung company → relevant set = 200. F1 bi pha loang. Hit@k va MRR la metrics chinh xac hon cho thí nghiem nay.
+
+#### Utility Retention (vs Baseline)
+
+| Metric | DP eps=20 | DP eps=8 |
+|---|---|---|
+| **Hit@1** | **98.4%** | 14.1% |
+| **Hit@3** | **103.2%** (tot hon baseline!) | 21.9% |
+| **Hit@5** | **102.6%** (tot hon baseline!) | 25.9% |
+| **Hit@10** | **101.0%** (tot hon baseline!) | 34.7% |
+| **MRR** | **99.8%** | 21.6% |
+| **NDCG@5** | **100.0%** | 100.0% |
+
+### 8.4 Key Findings (PubMed)
+
+#### Finding 1: DP eps=20 vuot Baseline o Hit@3/5/10
+
+DP noise dong vai tro **regularization**, giup model generalize tot hon baseline. Baseline bi degrade tu Pretrained (Hit@1: 96.5% → 92.5%) do overfitting tren data nho (2,594 records), trong khi DP noise ngan chan overfitting.
+
+#### Finding 2: Baseline lam giam chat luong so voi Pretrained
+
+Fine-tuning 25 rounds voi LR 1e-5 tren 2,594 records thuc su lam **giam** Hit@1 tu 96.5% xuong 92.5%. Model pretrained BGE-base-en da rat tot cho PubMed domain, fine-tuning them khong co loi.
+
+#### Finding 3: eps=8 van sup do tren PubMed
+
+Tuong tu experiment 1, eps=8 (sigma=1.67) gay sut giam nghiem trong:
+- Hit@1: 13.0% (vs baseline 92.5%)
+- MRR: 0.2025 (vs baseline 0.9364)
+- Gradient norm len toi ~34,000 o round 21 (vs clip norm C ~15)
+
+#### Finding 4: IIDPartitioner chia deu hoan hao
+
+Chuyen tu IDPartitioner sang IIDPartitioner giai quyet van de phan bo lech:
+- Truoc: Client 0=249 steps, Client 1=57 steps, Client 2=1,948 steps (34x chenh lech)
+- Sau: Tat ca clients = **59 steps** (deu tuyet doi)
+
+### 8.5 So sanh 2 Experiments
+
+| Aspect | Experiment 1 (old data) | Experiment 2 (PubMed) |
+|---|---|---|
+| Data | new_select_data.json (20,016) | pubmed_train.json (2,594) |
+| Companies | 3 (BioASQ, MedMCQA, PubMedQA) | 1 (pubmed) |
+| Partitioner | IDPartitioner | IIDPartitioner |
+| Server | Vast.ai RTX 3060 12GB | DigitalOcean RTX 6000 Ada 48GB |
+| Baseline Hit@1 | 84.50% | 92.50% |
+| DP eps=20 Hit@1 | 60.00% | **91.00%** |
+| DP eps=8 Hit@1 | 4.50% | 13.00% |
+| DP eps=20 MRR | 0.6967 | **0.9349** |
+| DP eps=20 retention Hit@1 | 71.0% | **98.4%** |
+
+**Nhan xet:** PubMed data cho ket qua tot hon nhieu vi:
+1. Data dong nhat (1 domain) → embeddings tu nhien gan nhau → de retrieval hon
+2. Pretrained BGE-base-en da tot cho medical domain
+3. IIDPartitioner chia deu → training on dinh hon
+
+### 8.6 File Locations (Experiment 2)
+
+| Item | Path |
+|---|---|
+| DP eps=20 model | `x-model_2026-04-10_03-58-24.bin` (on server) |
+| Baseline model | `x-model_2026-04-10_05-07-12.bin` (on server) |
+| DP eps=8 model | `x-model_2026-04-10_07-44-18.bin` (on server) |
+| DP eps=20 output log | `FedE/logs/dp_eps20_pubmed_output.log` |
+| DP eps=20 error log | `FedE/logs/dp_eps20_pubmed_error.log` |
+| Baseline output log | `FedE/logs/baseline_pubmed_output.log` |
+| Baseline error log | `FedE/logs/baseline_pubmed_error.log` |
+| DP eps=8 output log | `FedE/logs/dp_eps8_pubmed_output.log` |
+| DP eps=8 error log | `FedE/logs/dp_eps8_pubmed_error.log` |
+| Eval script | `FedE/eval_full.py` |
+| Training data | `FedE/pubmed_train.json` (2,594 records) |
+| Server | DigitalOcean RTX 6000 Ada 48GB: `ssh root@159.89.116.198` |
 
 ---
 

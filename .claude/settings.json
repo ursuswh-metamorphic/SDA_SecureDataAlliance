@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker ps:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)",
+      "WebSearch",
+      "WebFetch(domain:gist.github.com)"
+    ]
+  }
+}
