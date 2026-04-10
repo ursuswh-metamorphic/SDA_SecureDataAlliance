@@ -547,7 +547,59 @@ Chuyen tu IDPartitioner sang IIDPartitioner giai quyet van de phan bo lech:
 2. Pretrained BGE-base-en da tot cho medical domain
 3. IIDPartitioner chia deu → training on dinh hon
 
-### 8.6 File Locations (Experiment 2)
+### 8.6 DP-LoRA Experiment (eps=20)
+
+#### Configuration
+
+| Parameter | Full DP eps=20 | DP-LoRA eps=20 |
+|---|---|---|
+| Trainable params | 109,482,240 (100%) | **294,912 (0.27%)** |
+| Algorithm | `fedrag_dp.py` (FLGO) | `main_dp_lora.py` (standalone) |
+| LoRA config | N/A | r=8, alpha=16, targets=[query, value] |
+| Learning rate | 1e-5 | 1e-5 |
+| Clip norm | Adaptive (gamma=0.5) | 0.1 (fixed) |
+| Sigma | 0.8118 | 1.2940 |
+| Optimizer | SGD | AdamW (weight_decay=0.01) |
+| Training time | 5,378s (89.6 min) | ~3,500s (~58 min) |
+
+#### Results
+
+| Metric | Pretrained | Baseline | Full DP eps=20 | DP-LoRA eps=20 |
+|---|---|---|---|---|
+| **Hit@1** | 96.50% | 92.50% | **91.00%** | 3.00% |
+| **Hit@5** | 98.50% | 94.50% | **97.00%** | 8.50% |
+| **MRR** | 0.9726 | 0.9364 | **0.9349** | 0.0690 |
+| **Sim Gap** | 0.1711 | 0.2677 | **0.0746** | 0.0164 |
+| **Sim correct** | 0.9151 | 0.8171 | 0.9595 | 0.9466 |
+| **Sim incorrect** | 0.7440 | 0.5494 | 0.8849 | 0.9302 |
+
+#### Gradient Norm Progression
+
+| Round | v1 (broken, LR=1e-4) | v2 (fixed, LR=1e-5) |
+|---|---|---|
+| 1 | 0.03-0.15 | 0.03-0.10 |
+| 5 | ~billions (explode) | 0.14-0.38 |
+| 15 | ~trillions | 5-14 |
+| 25 | ~32 trillion | **2-5 (stable)** |
+
+#### Analysis
+
+DP-LoRA **khong hoat dong tot** tren PubMed dataset vi:
+
+1. **Pretrained da qua tot** — bge-base-en dat 96.5% Hit@1 khong can fine-tune. LoRA chi fine-tune 0.27% params nen khong du "luc" de cai thien, chi lam xau them khi co noise.
+
+2. **Data dong nhat (1 company)** — Tat ca 2,594 records deu la PubMed medical QA. Embeddings da gan nhau san (Sim incorrect = 0.74). LoRA + noise lam chung gan hon nua (0.93) → mat kha nang phan biet.
+
+3. **Sigma cao hon** — LoRA dung sampling_rate=1.0 (tat ca clients) thay vi 0.6, nen sigma = 1.294 (vs 0.812 cho full DP). Nhieu noise hon tren it params hon.
+
+4. **v1 bi gradient explosion** do LR=1e-4 qua cao + clip_norm=1.0 qua long cho LoRA (grad norm ~0.07). Da fix trong v2 (LR=1e-5, clip=0.1, AdamW, clip_grad_norm_) nhung van kem.
+
+**Ket luan:** DP-LoRA phu hop hon cho:
+- Data da dang (nhieu companies/domains can phan biet)
+- Model chua pretrained tot cho domain target
+- eps thap (eps=3-8) noi full DP bi sup do hoan toan
+
+### 8.7 File Locations (Experiment 2)
 
 | Item | Path |
 |---|---|
@@ -560,6 +612,10 @@ Chuyen tu IDPartitioner sang IIDPartitioner giai quyet van de phan bo lech:
 | Baseline error log | `FedE/logs/baseline_pubmed_error.log` |
 | DP eps=8 output log | `FedE/logs/dp_eps8_pubmed_output.log` |
 | DP eps=8 error log | `FedE/logs/dp_eps8_pubmed_error.log` |
+| DP-LoRA eps=20 model (v1, broken) | `x-model_lora_merged_2026-04-10_09-20-04.bin` (on server) |
+| DP-LoRA eps=20 model (v2, fixed) | `x-model_lora_merged_2026-04-10_10-32-52.bin` (on server) |
+| DP-LoRA eps=20 v2 output log | `FedE/logs/dp_lora_eps20_v2_output.log` |
+| DP-LoRA eps=20 v2 error log | `FedE/logs/dp_lora_eps20_v2_error.log` |
 | Eval script | `FedE/eval_full.py` |
 | Training data | `FedE/pubmed_train.json` (2,594 records) |
 | Server | DigitalOcean RTX 6000 Ada 48GB: `ssh root@159.89.116.198` |

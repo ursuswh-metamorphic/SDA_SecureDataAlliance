@@ -64,6 +64,7 @@ pre = BertModel.from_pretrained('BAAI/bge-base-en')
 base = load_model('x-model_2026-04-10_05-07-12.bin', 'Baseline')
 dp20 = load_model('x-model_2026-04-10_03-58-24.bin', 'DP-eps20')
 dp8 = load_model('x-model_2026-04-10_07-44-18.bin', 'DP-eps8')
+lora20 = load_model('x-model_lora_merged_2026-04-10_10-32-52.bin', 'DP-LoRA-eps20-v2')
 print()
 
 r = {}
@@ -71,9 +72,10 @@ r['pre'] = evaluate_model(pre, 'Pretrained')
 r['base'] = evaluate_model(base, 'Baseline (no DP)')
 r['dp20'] = evaluate_model(dp20, 'DP eps=20')
 r['dp8'] = evaluate_model(dp8, 'DP eps=8')
+r['lora20'] = evaluate_model(lora20, 'DP-LoRA eps=20')
 print()
 
-header = '{:<20} {:>12} {:>12} {:>12} {:>12}'.format('Metric', 'Pretrained', 'Baseline', 'DP_eps20', 'DP_eps8')
+header = '{:<20} {:>10} {:>10} {:>10} {:>10} {:>10}'.format('Metric', 'Pretrain', 'Baseline', 'DP_e20', 'DP_e8', 'LoRA_e20')
 print('=' * 82)
 print(header)
 print('-' * 82)
@@ -81,11 +83,11 @@ for key, label in [('hit1','Hit@1 (%)'),('hit3','Hit@3 (%)'),('hit5','Hit@5 (%)'
     ('f1_1','F1@1 (%)'),('f1_3','F1@3 (%)'),('f1_5','F1@5 (%)'),('f1_10','F1@10 (%)'),
     ('ndcg5','NDCG@5'),('ndcg10','NDCG@10'),('mrr','MRR'),
     ('sim_correct','Sim correct'),('sim_incorrect','Sim incorrect'),('gap','Sim Gap')]:
-    p, b, d20, d8 = r['pre'][key], r['base'][key], r['dp20'][key], r['dp8'][key]
+    p, b, d20, d8, l20 = r['pre'][key], r['base'][key], r['dp20'][key], r['dp8'][key], r['lora20'][key]
     if '%' in label:
-        print('{:<20} {:>12.2f} {:>12.2f} {:>12.2f} {:>12.2f}'.format(label, p, b, d20, d8))
+        print('{:<20} {:>10.2f} {:>10.2f} {:>10.2f} {:>10.2f} {:>10.2f}'.format(label, p, b, d20, d8, l20))
     else:
-        print('{:<20} {:>12.4f} {:>12.4f} {:>12.4f} {:>12.4f}'.format(label, p, b, d20, d8))
+        print('{:<20} {:>10.4f} {:>10.4f} {:>10.4f} {:>10.4f} {:>10.4f}'.format(label, p, b, d20, d8, l20))
 print('=' * 82)
 print()
 print('Retention vs Baseline:')
@@ -93,9 +95,7 @@ for key, label in [('hit1','Hit@1'),('hit5','Hit@5'),('mrr','MRR'),('ndcg5','NDC
     b = r['base'][key]
     d20 = r['dp20'][key]
     d8 = r['dp8'][key]
+    l20 = r['lora20'][key]
     if b > 0:
-        print('  {:<12} Baseline={:>8.2f}  eps20={:>8.2f} ({:.1f}%)  eps8={:>8.2f} ({:.1f}%)'.format(
-            label, b, d20, d20/b*100, d8, d8/b*100))
-print()
-print('Training time: Baseline=766s (12.8min), DP eps=20=5378s (89.6min), DP eps=8=5369s (89.5min)')
-print('Privacy: eps=20 sigma=0.8118, eps=8 sigma=1.6701')
+        print('  {:<12} Base={:>7.2f}  e20={:>7.2f}({:.0f}%)  e8={:>7.2f}({:.0f}%)  LoRA={:>7.2f}({:.0f}%)'.format(
+            label, b, d20, d20/b*100, d8, d8/b*100, l20, l20/b*100))

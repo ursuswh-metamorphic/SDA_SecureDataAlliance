@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from privacy.rdp_accountant import compute_epsilon, find_noise_multiplier, RDPAccountant
 
 # ── Config ─────────────────────────────────────────────────────────────────
-TARGET_EPSILON    = 8.0
+TARGET_EPSILON    = 20.0
 TARGET_DELTA      = 1e-5
 NUM_ROUNDS        = 25
 NUM_CLIENTS       = 5
