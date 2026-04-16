@@ -94,7 +94,7 @@ print(f"               δ={TARGET_DELTA}, rounds={NUM_ROUNDS}, q={sampling_rate:
 task = './num5_alpha05'
 config = {
     'benchmark': {'name': 'flgo.benchmark.fedrag_classification'},
-    'partitioner': {'name': 'IDPartitioner', 'para': {'num_clients': NUM_CLIENTS}},
+    'partitioner': {'name': 'IIDPartitioner', 'para': {'num_clients': NUM_CLIENTS}},
 }
 if not os.path.exists(task):
     flgo.gen_task(config, task_path=task)

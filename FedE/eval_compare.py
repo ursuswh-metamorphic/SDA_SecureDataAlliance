@@ -20,7 +20,7 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 # ── Load data ─────────────────────────────────────────────────────────────────
-with open('new_select_data.json', 'r', encoding='utf-8') as f:
+with open('pubmed_train.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
 # Sample subset for evaluation
