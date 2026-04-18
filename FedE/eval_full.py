@@ -1,5 +1,9 @@
 import torch, torch.nn.functional as F, json, numpy as np, sys, io
-from transformers import BertModel, BertTokenizer
+from transformers import AutoModel, AutoTokenizer
+
+# Upstream embedding backbone: MedCPT Article Encoder
+# https://huggingface.co/ncbi/MedCPT-Article-Encoder
+EMBEDDING_MODEL_NAME = "ncbi/MedCPT-Article-Encoder"
 from collections import defaultdict
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -14,7 +18,7 @@ references = [d['reference'] for d in test_data]
 companies = [d['company'] for d in test_data]
 print(f'Eval set: {len(test_data)} samples, {len(set(companies))} companies')
 
-tokenizer = BertTokenizer.from_pretrained('BAAI/bge-base-en')
+tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_NAME)
 max_length = tokenizer.model_max_length
 
 def evaluate_model(model, model_name):
@@ -23,11 +27,12 @@ def evaluate_model(model, model_name):
     for i in range(0, len(questions), 32):
         inp = tokenizer(questions[i:i+32], return_tensors='pt', padding=True, truncation=True, max_length=max_length)
         inp = {k: v.to(device) for k, v in inp.items()}
-        with torch.no_grad(): all_q.append(model(**inp).last_hidden_state.mean(dim=1).cpu())
+        # MedCPT uses [CLS] pooling (see HF model card)
+        with torch.no_grad(): all_q.append(model(**inp).last_hidden_state[:, 0, :].cpu())
     for i in range(0, len(references), 32):
         inp = tokenizer(references[i:i+32], return_tensors='pt', padding=True, truncation=True, max_length=max_length)
         inp = {k: v.to(device) for k, v in inp.items()}
-        with torch.no_grad(): all_r.append(model(**inp).last_hidden_state.mean(dim=1).cpu())
+        with torch.no_grad(): all_r.append(model(**inp).last_hidden_state[:, 0, :].cpu())
     sim = torch.mm(F.normalize(torch.cat(all_q), dim=-1), F.normalize(torch.cat(all_r), dim=-1).t()).numpy()
     N = len(sim)
     co = defaultdict(set)
@@ -53,14 +58,14 @@ def evaluate_model(model, model_name):
     return res
 
 def load_model(path, name):
-    base = BertModel.from_pretrained('BAAI/bge-base-en')
+    base = AutoModel.from_pretrained(EMBEDDING_MODEL_NAME)
     st = torch.load(path, map_location='cpu', weights_only=True)
     cl = {(k.replace('module.', '').replace('model.', '', 1) if 'model.' in k else k): v for k, v in st.items()}
     base.load_state_dict(cl, strict=False)
     return base
 
 print('Loading models...')
-pre = BertModel.from_pretrained('BAAI/bge-base-en')
+pre = AutoModel.from_pretrained(EMBEDDING_MODEL_NAME)
 base = load_model('x-model_2026-04-10_05-07-12.bin', 'Baseline')
 dp20 = load_model('x-model_2026-04-10_03-58-24.bin', 'DP-eps20')
 dp8 = load_model('x-model_2026-04-10_07-44-18.bin', 'DP-eps8')

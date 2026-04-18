@@ -19,8 +19,12 @@ import torch.nn.functional as F
 import numpy as np
 import json
 from datetime import datetime
-from transformers import BertModel, BertTokenizer
+from transformers import AutoModel, AutoTokenizer
 from peft import LoraConfig, get_peft_model
+
+# Upstream embedding backbone: MedCPT Article Encoder (PubMed biomedical)
+# https://huggingface.co/ncbi/MedCPT-Article-Encoder
+EMBEDDING_MODEL_NAME = "ncbi/MedCPT-Article-Encoder"
 
 sys.path.insert(0, os.path.dirname(__file__))
 from privacy.rdp_accountant import compute_epsilon, find_noise_multiplier, RDPAccountant
@@ -56,12 +60,12 @@ for i, d in enumerate(data):
     client_data[i % NUM_CLIENTS].append(d)
 print(f'Data: {len(data)} total, {[len(c) for c in client_data]} per client')
 
-tokenizer = BertTokenizer.from_pretrained('BAAI/bge-base-en')
+tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_NAME)
 max_length = tokenizer.model_max_length
 
 
 def create_lora_model():
-    base = BertModel.from_pretrained('BAAI/bge-base-en')
+    base = AutoModel.from_pretrained(EMBEDDING_MODEL_NAME)
     config = LoraConfig(
         r=LORA_R, lora_alpha=LORA_ALPHA,
         target_modules=LORA_TARGETS,
@@ -102,11 +106,12 @@ def train_client(client_id, global_state, client_dataset, sigma, clip_norm=0.1):
 
             q_inp = tokenizer([questions[i]], return_tensors='pt', padding=True,
                             truncation=True, max_length=max_length).to(device)
-            q_out = local_model(**q_inp).last_hidden_state.mean(dim=1)
+            # MedCPT uses [CLS] pooling (see HF model card)
+            q_out = local_model(**q_inp).last_hidden_state[:, 0, :]
 
             r_inp = tokenizer([references[i]], return_tensors='pt', padding=True,
                             truncation=True, max_length=max_length).to(device)
-            r_out = local_model(**r_inp).last_hidden_state.mean(dim=1)
+            r_out = local_model(**r_inp).last_hidden_state[:, 0, :]
 
             sim = F.cosine_similarity(q_out, r_out)
             loss = 1.0 - sim.mean()

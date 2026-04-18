@@ -155,7 +155,7 @@ llm = "gpt-4o"  # Các option: gpt-4o, gpt-4-turbo, gpt-4o-mini, gpt-3.5-turbo
 
 ```toml
 [settings]
-embeddings = "BAAI/bge-large-en"  # Hoặc: BAAI/bge-base-en, sentence-transformers/all-mpnet-base-v2
+embeddings = "ncbi/MedCPT-Article-Encoder"  # Default (MedCPT). Hoặc BGE/ST: "BAAI/bge-base-en", "sentence-transformers/all-mpnet-base-v2"
 ```
 
 ### **Bật/Tắt Privacy**

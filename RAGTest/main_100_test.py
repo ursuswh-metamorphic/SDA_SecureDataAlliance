@@ -41,7 +41,7 @@ cfg = Config()
 import argparse
 
 
-#Get para and execute (python main_100_test.py --model="BAAI/bge-base-en")
+#Get para and execute (python main_100_test.py --model="ncbi/MedCPT-Article-Encoder")
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, default=None)
 args = parser.parse_args()

@@ -115,7 +115,8 @@ async def startup_event():
         embeddings_path = getattr(cfg, "embeddings", None)
         if not embeddings_path or embeddings_path == "embedding path":
             logger.warning("No valid embeddings path in config, using default")
-            embeddings_path = "BAAI/bge-base-en"
+            # Matches upstream MedCPT training (ncbi/MedCPT-Article-Encoder)
+            embeddings_path = "ncbi/MedCPT-Article-Encoder"
 
         embeddings = get_embedding(embeddings_path)
         llm = get_llm(cfg.llm)

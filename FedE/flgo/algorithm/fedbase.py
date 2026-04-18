@@ -8,7 +8,11 @@ import torch
 import torch.multiprocessing as mp
 import multiprocessing.dummy as dmp
 import numpy as np
-from transformers import BertModel
+from transformers import AutoModel
+
+# Upstream embedding backbone: MedCPT Article Encoder
+# https://huggingface.co/ncbi/MedCPT-Article-Encoder
+EMBEDDING_MODEL_NAME = "ncbi/MedCPT-Article-Encoder"
 
 import flgo.benchmark.base
 from flgo.utils import fmodule
@@ -766,7 +770,7 @@ class BasicClient(BasicParty):
         self.num_epochs = option['num_epochs']
         self.clip_grad = option['clip_grad']
         # TODO 模型路径
-        self.model = BertModel.from_pretrained('BAAI/bge-base-en')
+        self.model = AutoModel.from_pretrained(EMBEDDING_MODEL_NAME)
         print("!!!!!!!!!!!!!!!client model!!!!!!!!!!!!!!!!!!")
         print(type(self.model))
         self.test_batch_size = option['test_batch_size']

@@ -2,7 +2,11 @@ import urllib
 import zipfile
 import torch
 from torch.utils.data import TensorDataset, Dataset
-from transformers import BertTokenizer
+from transformers import AutoTokenizer
+
+# Upstream embedding backbone: MedCPT Article Encoder
+# https://huggingface.co/ncbi/MedCPT-Article-Encoder
+EMBEDDING_MODEL_NAME = "ncbi/MedCPT-Article-Encoder"
 
 from flgo.benchmark.toolkits import BasicTaskGenerator, BasicTaskCalculator
 from flgo.benchmark.base import BasicTaskPipe
@@ -131,7 +135,7 @@ class TaskCalculator(GeneralCalculator):
         self.DataLoader = torch.utils.data.DataLoader
         self.criterion = torch.nn.CrossEntropyLoss()
         # TODO 加载模型
-        self.tokenizer = BertTokenizer.from_pretrained('BAAI/bge-base-en')
+        self.tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_NAME)
 
     def compute_client_loss(self, server_logits, model, batch_data):
         questions = batch_data[0]
@@ -144,13 +148,14 @@ class TaskCalculator(GeneralCalculator):
                                          max_length=max_length)
         question_inputs.to(self.device)
         question_outputs = model(**question_inputs)
-        question_pooled_tensors = torch.mean(question_outputs.last_hidden_state, dim=1, keepdim=False)
+        # MedCPT uses [CLS] pooling (see HF model card)
+        question_pooled_tensors = question_outputs.last_hidden_state[:, 0, :]
 
         reference_inputs = self.tokenizer(references, return_tensors="pt", padding=True, truncation=True,
                                           max_length=max_length)
         reference_inputs.to(self.device)
         reference_outputs = model(**reference_inputs)
-        reference_pooled_tensors = torch.mean(reference_outputs.last_hidden_state, dim=1, keepdim=False)
+        reference_pooled_tensors = reference_outputs.last_hidden_state[:, 0, :]
 
         logits = cos_sim(question_pooled_tensors, reference_pooled_tensors)
         logits.to(self.device)
@@ -175,14 +180,15 @@ class TaskCalculator(GeneralCalculator):
         question_inputs.to(self.device)
         with torch.no_grad():
             question_outputs = model(**question_inputs)
-        question_pooled_tensors = torch.mean(question_outputs.last_hidden_state, dim=1, keepdim=False)
+        # MedCPT uses [CLS] pooling (see HF model card)
+        question_pooled_tensors = question_outputs.last_hidden_state[:, 0, :]
 
         reference_inputs = self.tokenizer(references, return_tensors="pt", padding=True, truncation=True,
                                           max_length=max_length)
         reference_inputs.to(self.device)
         with torch.no_grad():
             reference_outputs = model(**reference_inputs)
-        reference_pooled_tensors = torch.mean(reference_outputs.last_hidden_state, dim=1, keepdim=False)
+        reference_pooled_tensors = reference_outputs.last_hidden_state[:, 0, :]
 
         logits = cos_sim(question_pooled_tensors, reference_pooled_tensors)
         return logits

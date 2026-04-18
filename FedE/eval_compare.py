@@ -12,7 +12,11 @@ import torch
 import torch.nn.functional as F
 import json
 import numpy as np
-from transformers import BertModel, BertTokenizer
+from transformers import AutoModel, AutoTokenizer
+
+# Upstream embedding backbone: MedCPT Article Encoder
+# https://huggingface.co/ncbi/MedCPT-Article-Encoder
+EMBEDDING_MODEL_NAME = "ncbi/MedCPT-Article-Encoder"
 from collections import defaultdict
 import sys, io
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -37,7 +41,7 @@ print(f'Unique companies: {len(set(companies))}')
 print()
 
 # ── Load tokenizer ────────────────────────────────────────────────────────────
-tokenizer = BertTokenizer.from_pretrained('BAAI/bge-base-en')
+tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_NAME)
 max_length = tokenizer.model_max_length
 
 
@@ -55,7 +59,8 @@ def evaluate_model(model, model_name):
         inputs = {k: v.to(device) for k, v in inputs.items()}
         with torch.no_grad():
             outputs = model(**inputs)
-        embs = outputs.last_hidden_state.mean(dim=1)
+        # MedCPT uses [CLS] pooling (see HF model card)
+        embs = outputs.last_hidden_state[:, 0, :]
         all_q_embs.append(embs.cpu())
 
     for i in range(0, len(references), batch_size):
@@ -64,7 +69,7 @@ def evaluate_model(model, model_name):
         inputs = {k: v.to(device) for k, v in inputs.items()}
         with torch.no_grad():
             outputs = model(**inputs)
-        embs = outputs.last_hidden_state.mean(dim=1)
+        embs = outputs.last_hidden_state[:, 0, :]
         all_r_embs.append(embs.cpu())
 
     q_embs = torch.cat(all_q_embs, dim=0)
@@ -199,7 +204,7 @@ def evaluate_model(model, model_name):
 
 
 def load_model(path, name):
-    base = BertModel.from_pretrained('BAAI/bge-base-en')
+    base = AutoModel.from_pretrained(EMBEDDING_MODEL_NAME)
     state = torch.load(path, map_location='cpu', weights_only=True)
     clean = {}
     for k, v in state.items():
@@ -212,7 +217,7 @@ def load_model(path, name):
 
 # ── Load models ───────────────────────────────────────────────────────────────
 print('Loading pretrained model...')
-pretrained = BertModel.from_pretrained('BAAI/bge-base-en')
+pretrained = AutoModel.from_pretrained(EMBEDDING_MODEL_NAME)
 
 print('Loading baseline model...')
 baseline = load_model('x-model_2026-03-29_04-39-38.bin', 'Baseline')

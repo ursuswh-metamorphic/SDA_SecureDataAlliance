@@ -3,7 +3,7 @@ import os
 import sys
 from transformers import AutoModel, AutoTokenizer
 
-def fix_model_state_dict(model_path, base_model_name="BAAI/bge-base-en", output_dir=None):
+def fix_model_state_dict(model_path, base_model_name="ncbi/MedCPT-Article-Encoder", output_dir=None):
     """
     Convert model from upstream training to HuggingFace format.
     
@@ -162,7 +162,8 @@ if __name__ == "__main__":
     if len(sys.argv) > 3:
         base_model_name = sys.argv[3]
     else:
-        base_model_name = "BAAI/bge-base-en"  # Default
+        # Default matches upstream MedCPT Article Encoder training.
+        base_model_name = "ncbi/MedCPT-Article-Encoder"
     
     success = fix_model_state_dict(model_path, base_model_name=base_model_name, output_dir=output_dir)
     
