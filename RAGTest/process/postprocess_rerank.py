@@ -7,13 +7,16 @@ from llama_index.postprocessor.flag_embedding_reranker import FlagEmbeddingReran
 # !pip install llama-index-postprocessor-cohere-rerank
 
 def get_postprocessor(cfg):
-    # postprocess rerank, available: long_context_reorder, colbertv2_rerank, cohere_rerank, bge-reranker-base
+    # postprocess rerank, available: long_context_reorder, colbertv2_rerank, cohere_rerank,
+    #   medcpt-cross-encoder (biomedical, matches upstream training), bge-reranker-base (general)
     if cfg.postprocess_rerank == 'long_context_reorder':
         return LongContextReorder()
     elif cfg.postprocess_rerank == 'colbertv2_rerank':
         return ColbertRerank()
     elif cfg.postprocess_rerank == 'cohere_rerank':
         return CohereRerank()
+    elif cfg.postprocess_rerank == 'medcpt-cross-encoder':
+        return FlagEmbeddingReranker(model="ncbi/MedCPT-Cross-Encoder")
     elif cfg.postprocess_rerank == 'bge-reranker-base':
         return FlagEmbeddingReranker(model="BAAI/bge-reranker-base")
     else:

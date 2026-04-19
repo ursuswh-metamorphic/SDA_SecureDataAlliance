@@ -7,6 +7,8 @@ from transformers import AutoTokenizer
 # Upstream embedding backbone: MedCPT Article Encoder
 # https://huggingface.co/ncbi/MedCPT-Article-Encoder
 EMBEDDING_MODEL_NAME = "ncbi/MedCPT-Article-Encoder"
+# MedCPT max sequence length (some tokenizers return a huge default for model_max_length)
+MEDCPT_MAX_LENGTH = 512
 
 from flgo.benchmark.toolkits import BasicTaskGenerator, BasicTaskCalculator
 from flgo.benchmark.base import BasicTaskPipe
@@ -142,7 +144,7 @@ class TaskCalculator(GeneralCalculator):
         answers = batch_data[1]
         references = batch_data[2]
 
-        max_length = self.tokenizer.model_max_length
+        max_length = min(self.tokenizer.model_max_length, MEDCPT_MAX_LENGTH)
 
         question_inputs = self.tokenizer(questions, return_tensors="pt", padding=True, truncation=True,
                                          max_length=max_length)
@@ -173,7 +175,7 @@ class TaskCalculator(GeneralCalculator):
         answers = batch_data[1]
         references = batch_data[2]
 
-        max_length = self.tokenizer.model_max_length
+        max_length = min(self.tokenizer.model_max_length, MEDCPT_MAX_LENGTH)
 
         question_inputs = self.tokenizer(questions, return_tensors="pt", padding=True, truncation=True,
                                          max_length=max_length)

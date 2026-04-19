@@ -42,7 +42,8 @@ print()
 
 # ── Load tokenizer ────────────────────────────────────────────────────────────
 tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL_NAME)
-max_length = tokenizer.model_max_length
+# MedCPT max sequence length (tokenizer.model_max_length may return a huge default)
+max_length = min(tokenizer.model_max_length, 512)
 
 
 def evaluate_model(model, model_name):

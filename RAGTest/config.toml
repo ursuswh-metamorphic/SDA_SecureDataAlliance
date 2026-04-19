@@ -28,5 +28,5 @@ test_all_number_documents = 40
 experiment_1 = false
 retriever = "Vector"
 retriever_mode = 0
-postprocess_rerank = "long_context_reorder"
+postprocess_rerank = "medcpt-cross-encoder"
 query_transform = "none"
