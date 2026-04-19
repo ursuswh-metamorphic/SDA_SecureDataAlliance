@@ -152,7 +152,7 @@ if __name__ == "__main__":
         print("  # Specify output directory:")
         print("  python change.py ../FedE/x-model.bin ./converted_model")
         print("  # Specify base model:")
-        print("  python change.py ../FedE/x-model.bin ./converted_model \"BAAI/bge-large-en-v1.5\"")
+        print("  python change.py ../FedE/x-model.bin ./converted_model \"ncbi/MedCPT-Article-Encoder\"")
         sys.exit(1)
     
     # Output directory (optional)
