@@ -547,6 +547,79 @@ Chuyen tu IDPartitioner sang IIDPartitioner giai quyet van de phan bo lech:
 2. Pretrained BGE-base-en da tot cho medical domain
 3. IIDPartitioner chia deu → training on dinh hon
 
+### 8.5b So sanh chi tiet 2 Experiments
+
+#### Khac biet ve data va cau hinh
+
+| | Experiment 1 (Section 6.1) | Experiment 2 (Section 8.3) |
+|---|---|---|
+| **Data file** | `new_select_data.json` | `pubmed_train.json` |
+| **So luong records** | 20,016 | 2,594 |
+| **So companies** | 3 (BioASQ, MedMCQA, PubMedQA) | 1 (PubMed) |
+| **Domain** | Da domain (medical QA tong hop) | Don domain (PubMed medical) |
+| **Partitioner** | IDPartitioner (chia theo company) | IIDPartitioner (chia deu ngau nhien) |
+| **Steps/client** | 11-50 (lech) | 59 (deu tuyet doi) |
+| **Server** | Vast.ai RTX 3060 12GB | DigitalOcean RTX 6000 Ada 48GB |
+| **Ngay chay** | 2026-03-29 | 2026-04-10 |
+
+#### So sanh ket qua toan bo
+
+| Metric | Exp 1 Pretrain | Exp 2 Pretrain | Exp 1 Baseline | Exp 2 Baseline | Exp 1 DP e=20 | Exp 2 DP e=20 | Exp 1 DP e=8 | Exp 2 DP e=8 |
+|---|---|---|---|---|---|---|---|---|
+| **Hit@1** | 84.50% | **96.50%** | 84.50% | 92.50% | 60.00% | **91.00%** | 4.50% | 13.00% |
+| **Hit@5** | 98.50% | **98.50%** | 98.50% | 94.50% | 82.00% | **97.00%** | 11.00% | 24.50% |
+| **MRR** | 0.911 | **0.973** | 0.911 | 0.936 | 0.697 | **0.935** | 0.092 | 0.203 |
+| **NDCG@5** | 0.879 | **1.000** | 0.879 | 1.000 | 0.864 | **1.000** | 0.788 | 1.000 |
+| **F1@1** | **84.50%** | 1.00% | **84.50%** | 1.00% | **60.00%** | 1.00% | **4.50%** | 1.00% |
+| **Sim Gap** | 0.143 | 0.171 | 0.145 | **0.268** | 0.044 | 0.075 | 0.017 | 0.041 |
+| **Training time** | N/A | N/A | 1,023s | **766s** | 4,309s | 5,378s | 4,284s | 5,369s |
+
+#### So sanh Retention (DP eps=20 vs Baseline)
+
+| Metric | Exp 1 Retention | Exp 2 Retention | Nhan xet |
+|---|---|---|---|
+| **Hit@1** | 71.0% | **98.4%** | Exp 2 giu gan toan bo |
+| **Hit@5** | 83.2% | **102.6%** | Exp 2 tot hon ca baseline (regularization) |
+| **MRR** | 76.5% | **99.8%** | Exp 2 gan nhu khong mat |
+| **NDCG@5** | 98.3% | **100.0%** | Ca 2 deu tot |
+
+#### Phan tich chi tiet su khac biet
+
+**1. Tai sao Pretrained o Exp 2 (96.5%) cao hon Exp 1 (84.5%)?**
+
+Data PubMed dong nhat (1 company) → tat ca embeddings cung domain medical → cosine similarity tu nhien cao giua cac cap dung. Data Exp 1 co 3 companies khac nhau → embeddings phan tan hon → kho retrieval hon.
+
+**2. Tai sao Baseline o Exp 1 = Pretrained, nhung Exp 2 < Pretrained?**
+
+- Exp 1: Learning rate 1e-5 qua nho cho 20,016 records → model hau nhu khong thay doi sau 25 rounds → Baseline = Pretrained
+- Exp 2: Cung LR 1e-5 nhung chi 2,594 records → model thay doi nhanh hon → bi overfit → Baseline (92.5%) < Pretrained (96.5%)
+
+**3. Tai sao DP eps=20 retention o Exp 2 (98.4%) tot hon Exp 1 (71.0%)?**
+
+Ba ly do:
+- PubMed data de hon (dong nhat, pretrained da tot)
+- IIDPartitioner chia deu → training on dinh, khong co client dominate
+- DP noise dong vai tro **regularization** → ngan overfit → DP eps=20 thuc su tot hon baseline o Hit@3/5/10
+
+**4. Tai sao F1@1 o Exp 1 = 84.5% nhung Exp 2 = 1.0%?**
+
+Do cach tinh F1 phu thuoc vao relevant set:
+- Exp 1 (3 companies): Relevant set = cac docs cung company (~67 docs). Khi Hit@1 dung → Precision=1/1=100%, Recall=1/67~1.5% → F1 co y nghia
+- Exp 2 (1 company): Relevant set = **tat ca 200 docs** (vi chi co 1 company). Recall@1 = 1/200 = 0.5% → F1 luan thap bat ke model tot hay xau
+
+**Ket luan:** O Exp 2, **F1@k khong phai metric phu hop**. Chi nen dung **Hit@k va MRR**.
+
+**5. Tom tat: Khi nao data anh huong ket qua DP?**
+
+| Dac diem data | Anh huong len DP | Exp 1 vs Exp 2 |
+|---|---|---|
+| Data dong nhat (1 domain) | DP hoat dong tot hon (embeddings gan nhau san) | Exp 2 tot hon |
+| Data da dang (nhieu domains) | DP kho hon (can hoc phan biet domains) | Exp 1 kho hon |
+| Data lon (20K) | Fine-tune hieu qua hon, it overfit | Exp 1 baseline on dinh |
+| Data nho (2.6K) | De overfit, DP noise giup regularize | Exp 2 DP > baseline |
+| Phan bo deu (IID) | Training on dinh | Exp 2 on dinh hon |
+| Phan bo lech (non-IID) | Client lon dominate training | Exp 1 lech (11-50 steps) |
+
 ### 8.6 DP-LoRA Experiment (eps=20)
 
 #### Configuration
