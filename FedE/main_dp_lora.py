@@ -31,10 +31,10 @@ TARGET_DELTA      = 1e-5
 NUM_ROUNDS        = 25
 NUM_CLIENTS       = 5
 BATCH_SIZE        = 8
-LEARNING_RATE     = 1e-5  # Conservative LR to prevent gradient explosion with DP noise
+LEARNING_RATE     = 5e-5  # Conservative LR to prevent gradient explosion with DP noise
 LORA_R            = 8
 LORA_ALPHA        = 16
-LORA_DROPOUT      = 0.05
+LORA_DROPOUT      = 0.1
 LORA_TARGETS      = ['query', 'value']
 
 sampling_rate = NUM_CLIENTS / NUM_CLIENTS  # All clients
@@ -81,10 +81,10 @@ def train_client(client_id, global_state, client_dataset, sigma, clip_norm=0.1):
     local_model.train()
 
     lora_params = [p for p in local_model.parameters() if p.requires_grad]
-    optimizer = torch.optim.AdamW(lora_params, lr=LEARNING_RATE, weight_decay=0.01)
+    optimizer = torch.optim.Adam(lora_params, lr=LEARNING_RATE, weight_decay=0.01)
 
     np.random.shuffle(client_dataset)
-    num_steps = min(50, max(1, len(client_dataset) // BATCH_SIZE))
+    num_steps = min(20, max(1, len(client_dataset) // BATCH_SIZE))
 
     for step in range(num_steps):
         batch = client_dataset[step*BATCH_SIZE : (step+1)*BATCH_SIZE]
@@ -126,7 +126,7 @@ def train_client(client_id, global_state, client_dataset, sigma, clip_norm=0.1):
             noise = torch.randn_like(accumulated[j]) * (sigma * clip_norm / float(bs))
             p.grad = accumulated[j] / float(bs) + noise
 
-        # Clip final gradient to prevent explosion
+
         torch.nn.utils.clip_grad_norm_(lora_params, max_norm=1.0)
         optimizer.step()
 
