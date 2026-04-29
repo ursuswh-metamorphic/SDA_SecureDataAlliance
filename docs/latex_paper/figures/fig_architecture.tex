@@ -1,0 +1,212 @@
+% Architecture Diagram: DP-FedRAG System
+% Usage: \input{figures/fig_architecture} inside a figure* environment
+% Requires: \usepackage{tikz} in preamble
+% Also add: \usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc, backgrounds, patterns}
+
+\begin{tikzpicture}[
+    % Global styles
+    font=\footnotesize\sffamily,
+    >=Stealth,
+    node distance=0.4cm,
+    % Box styles
+    component/.style={draw, rounded corners=3pt, minimum height=0.7cm, text width=3.2cm, align=center, inner sep=3pt},
+    component_sm/.style={draw, rounded corners=2pt, minimum height=0.6cm, text width=2.6cm, align=center, inner sep=2pt, font=\scriptsize\sffamily},
+    client_box/.style={draw=green!50!black, fill=green!3, rounded corners=5pt, inner sep=5pt},
+    server_box/.style={draw=orange!70!black, fill=orange!5, rounded corners=5pt, inner sep=5pt},
+    dp_box/.style={draw=red!70!black, fill=red!5, rounded corners=4pt, line width=1.2pt, inner sep=4pt},
+    dp_inner/.style={draw=red!60!black, fill=red!8, rounded corners=2pt, minimum height=0.6cm, text width=2.4cm, align=center, inner sep=2pt, font=\scriptsize\sffamily},
+    kd_style/.style={component, draw=blue!60!black, fill=blue!5},
+    he_style/.style={component, draw=purple!60!black, fill=purple!5},
+    emb_style/.style={component, draw=blue!60!black, fill=blue!8},
+    loss_style/.style={component, draw=gray!60!black, fill=orange!5},
+    gen_style/.style={component_sm, draw=gray!70!black, fill=indigo!5},
+    retrieval_style/.style={component_sm, draw=blue!60!black, fill=blue!5},
+    privacy_style/.style={component_sm, draw=red!50!black, fill=red!5},
+    route_style/.style={draw=orange!70!black, fill=orange!8, rounded corners=4pt, line width=1.2pt, minimum height=1.2cm, text width=3cm, align=center, inner sep=4pt},
+    llm_style/.style={draw=violet!60!black, fill=violet!5, rounded corners=4pt, minimum height=1cm, text width=5.5cm, align=center, inner sep=4pt},
+    user_style/.style={draw=gray!70!black, fill=gray!10, circle, minimum size=0.9cm, align=center, font=\scriptsize\sffamily},
+    % Arrow styles
+    flow/.style={->, thick, gray!70!black},
+    flow_dp/.style={->, thick, red!60!black},
+    flow_he/.style={->, thick, purple!60!black},
+    flow_kd/.style={<->, thick, blue!50!black, dashed},
+    flow_route/.style={->, thick, orange!70!black},
+    flow_thin/.style={->, gray!60!black},
+    section_title/.style={font=\normalsize\sffamily\bfseries},
+    legend_box/.style={draw, rounded corners=2pt, minimum height=0.4cm, text width=3cm, align=center, inner sep=2pt, font=\tiny\sffamily},
+]
+
+% ============================================================
+% SECTION TITLES
+% ============================================================
+\node[section_title] (title_up) at (6.5, 0) {Upstream: Privacy-Preserving Federated Embedding Pre-training};
+
+% ============================================================
+% CLIENT A (Hospital A) — Left
+% ============================================================
+
+% Internal components
+\node[emb_style, text width=2.2cm] (globalA) at (1.0, -1.2) {Global RAG\\Embedding};
+\node[emb_style, text width=2.2cm] (localA) at (3.8, -1.2) {Local RAG\\Embedding};
+
+\node[loss_style, text width=4.5cm] (lossA) at (2.4, -2.4) {Contrastive Loss + KD Loss\\$\mathcal{L} = \mathcal{L}_{\text{RAG}} + \alpha \cdot \mathcal{L}_{\text{KD}}$};
+
+% DP-SGD Block (highlighted)
+\node[dp_inner] (clipA) at (1.2, -3.8) {Gradient Clipping\\$\|\mathbf{g}\|_2 \leq C$};
+\node[dp_inner] (noiseA) at (3.8, -3.8) {Noise Injection\\$\tilde{\mathbf{g}} = \mathbf{g} + \mathcal{N}(0, \sigma^2 C^2 \mathbf{I})$};
+
+\node[he_style, text width=4.5cm] (ckksA) at (2.4, -5.3) {CKKS Homomorphic Encryption\\$\text{Enc}(\Delta)$ with public key};
+
+% DP-SGD container
+\begin{scope}[on background layer]
+    \node[dp_box, fit=(clipA)(noiseA), label={[font=\scriptsize\sffamily\bfseries, red!70!black]above:$\bigstar$ DP-SGD (Differential Privacy)}] (dpsgdA) {};
+\end{scope}
+
+% DP accounting label
+\node[font=\tiny\sffamily, red!60!black, align=center] (rdpA) at (2.4, -4.55) {RDP Accounting: $(\varepsilon{=}20,\, \delta{=}10^{-5})$-DP};
+
+% Client A container
+\begin{scope}[on background layer]
+    \node[client_box, fit=(globalA)(localA)(lossA)(dpsgdA)(ckksA)(rdpA), label={[font=\footnotesize\sffamily\bfseries, green!50!black]above:Hospital A (Client 1)}] (clientA) {};
+\end{scope}
+
+% Data label
+\node[font=\tiny\sffamily, gray!60!black] at (2.4, -0.65) {Private Medical Data};
+
+% Internal arrows Client A
+\draw[flow_kd] (globalA) -- node[above, font=\tiny, blue!50!black] {logits} (localA);
+\draw[flow] (lossA) -- node[right, font=\tiny] {backward} (dpsgdA);
+\draw[flow_dp] (clipA) -- (noiseA);
+\draw[flow_dp] (dpsgdA) -- (ckksA);
+\draw[flow] ([yshift=-2pt]localA.south) -- ([yshift=2pt]lossA.north east);
+\draw[flow] ([yshift=-2pt]globalA.south) -- ([yshift=2pt]lossA.north west);
+
+% ============================================================
+% SERVER — Center
+% ============================================================
+\node[component, draw=orange!70!black, fill=orange!8, text width=4cm] (agg) at (6.5, -2.8) {FedAvg Aggregation\\$\mathbf{W} \leftarrow \mathbf{W} + \frac{1}{N}\sum_i \text{Dec}(\Delta_i)$};
+\node[component, draw=green!50!black, fill=green!8, text width=3.5cm] (globalM) at (6.5, -4.0) {Trained Global\\Embedding Model};
+
+\begin{scope}[on background layer]
+    \node[server_box, fit=(agg)(globalM), label={[font=\footnotesize\sffamily\bfseries, orange!70!black]above:FL Server (Aggregator)}] (server) {};
+\end{scope}
+
+\draw[flow] (agg) -- (globalM);
+
+% ============================================================
+% CLIENT N (Hospital N) — Right
+% ============================================================
+
+\node[emb_style, text width=2.2cm] (globalN) at (9.2, -1.2) {Global RAG\\Embedding};
+\node[emb_style, text width=2.2cm] (localN) at (12.0, -1.2) {Local RAG\\Embedding};
+
+\node[loss_style, text width=4.5cm] (lossN) at (10.6, -2.4) {Contrastive Loss + KD Loss\\$\mathcal{L} = \mathcal{L}_{\text{RAG}} + \alpha \cdot \mathcal{L}_{\text{KD}}$};
+
+\node[dp_inner] (clipN) at (9.4, -3.8) {Gradient Clipping\\$\|\mathbf{g}\|_2 \leq C$};
+\node[dp_inner] (noiseN) at (12.0, -3.8) {Noise Injection\\$\tilde{\mathbf{g}} = \mathbf{g} + \mathcal{N}(0, \sigma^2 C^2 \mathbf{I})$};
+
+\node[he_style, text width=4.5cm] (ckksN) at (10.6, -5.3) {CKKS Homomorphic Encryption\\$\text{Enc}(\Delta)$ with public key};
+
+\begin{scope}[on background layer]
+    \node[dp_box, fit=(clipN)(noiseN), label={[font=\scriptsize\sffamily\bfseries, red!70!black]above:$\bigstar$ DP-SGD (Differential Privacy)}] (dpsgdN) {};
+\end{scope}
+
+\node[font=\tiny\sffamily, red!60!black, align=center] (rdpN) at (10.6, -4.55) {RDP Accounting: $(\varepsilon{=}20,\, \delta{=}10^{-5})$-DP};
+
+\begin{scope}[on background layer]
+    \node[client_box, fit=(globalN)(localN)(lossN)(dpsgdN)(ckksN)(rdpN), label={[font=\footnotesize\sffamily\bfseries, green!50!black]above:Hospital N (Client $N$)}] (clientN) {};
+\end{scope}
+
+\node[font=\tiny\sffamily, gray!60!black] at (10.6, -0.65) {Private Medical Data};
+
+% Internal arrows Client N
+\draw[flow_kd] (globalN) -- node[above, font=\tiny, blue!50!black] {logits} (localN);
+\draw[flow] (lossN) -- node[right, font=\tiny] {backward} (dpsgdN);
+\draw[flow_dp] (clipN) -- (noiseN);
+\draw[flow_dp] (dpsgdN) -- (ckksN);
+\draw[flow] ([yshift=-2pt]localN.south) -- ([yshift=2pt]lossN.north east);
+\draw[flow] ([yshift=-2pt]globalN.south) -- ([yshift=2pt]lossN.north west);
+
+% ============================================================
+% ARROWS: Clients <-> Server
+% ============================================================
+\draw[flow_he, bend right=15] (ckksA.east) to node[below, font=\tiny, purple!60!black] {$\text{Enc}(\Delta)$} (agg.west);
+\draw[flow, bend right=15, green!50!black] (server.west) to node[above, font=\tiny, green!50!black] {$\mathbf{W}_{\text{global}}$} (globalA.east);
+
+\draw[flow_he, bend left=15] (ckksN.west) to node[below, font=\tiny, purple!60!black] {$\text{Enc}(\Delta)$} (agg.east);
+\draw[flow, bend left=15, green!50!black] (server.east) to node[above, font=\tiny, green!50!black] {$\mathbf{W}_{\text{global}}$} (globalN.west);
+
+% Dots between clients
+\node[font=\large, gray!50] at (6.5, -1.2) {$\cdots$};
+
+% ============================================================
+% CONNECTOR: Upstream -> Downstream
+% ============================================================
+\draw[flow, line width=1.5pt, green!50!black, dashed] (globalM.south) -- ++(0, -0.6) node[right, font=\tiny, green!50!black] {model checkpoint} -- ++(0, -0.4);
+
+% ============================================================
+% DOWNSTREAM SECTION
+% ============================================================
+\node[section_title] (title_down) at (6.5, -6.2) {Downstream: Federated Retrieval-Augmented Generation Inference};
+
+% --- Left Client ---
+\node[component_sm, draw=green!50!black, fill=green!8, text width=3.5cm] (embDL) at (1.8, -7.0) {DP-Trained Embedding Model};
+\node[retrieval_style, text width=3.5cm] (retDL) at (1.8, -7.8) {FAISS Index + LlamaIndex\\Multi-Retriever};
+\node[privacy_style, text width=3.5cm] (priDL) at (1.8, -8.6) {Privacy-aware\\Summarization};
+\node[gen_style, text width=3.5cm] (genDL) at (1.8, -9.4) {Generation Model};
+
+\begin{scope}[on background layer]
+    \node[client_box, fit=(embDL)(retDL)(priDL)(genDL), label={[font=\scriptsize\sffamily\bfseries, green!50!black]above:Hospital A (FL Client)}] (dcL) {};
+\end{scope}
+
+\draw[flow_thin] (embDL) -- (retDL);
+\draw[flow_thin] (retDL) -- (priDL);
+\draw[flow_thin] (priDL) -- (genDL);
+
+% --- Right Client ---
+\node[component_sm, draw=green!50!black, fill=green!8, text width=3.5cm] (embDR) at (11.2, -7.0) {DP-Trained Embedding Model};
+\node[retrieval_style, text width=3.5cm] (retDR) at (11.2, -7.8) {FAISS Index + LlamaIndex\\Multi-Retriever};
+\node[privacy_style, text width=3.5cm] (priDR) at (11.2, -8.6) {Privacy-aware\\Summarization};
+\node[gen_style, text width=3.5cm] (genDR) at (11.2, -9.4) {Generation Model};
+
+\begin{scope}[on background layer]
+    \node[client_box, fit=(embDR)(retDR)(priDR)(genDR), label={[font=\scriptsize\sffamily\bfseries, green!50!black]above:Hospital N (FL Client)}] (dcR) {};
+\end{scope}
+
+\draw[flow_thin] (embDR) -- (retDR);
+\draw[flow_thin] (retDR) -- (priDR);
+\draw[flow_thin] (priDR) -- (genDR);
+
+% --- RagRoute (Center) ---
+\node[route_style] (ragroute) at (6.5, -8.0) {\textbf{RagRoute}\\Intelligent Query Routing\\\scriptsize $\checkmark$ relevant \quad $\times$ not relevant};
+
+% Arrows: Clients -> RagRoute
+\draw[flow_route] (priDL.east) -- node[above, font=\tiny, orange!70!black] {retrieved docs} (ragroute.west);
+\draw[flow_route] (priDR.west) -- node[above, font=\tiny, orange!70!black] {retrieved docs} (ragroute.east);
+
+% --- Global LLM Fusion (Bottom Center) ---
+\node[llm_style] (llm) at (6.5, -10.2) {\textbf{Global LLM Fusion}\\Embedding Model + Prompt Privacy\\PII Detection (Presidio)};
+
+% Arrows to LLM
+\draw[flow_route] (ragroute.south) -- node[right, font=\tiny] {routed query} (llm.north);
+\draw[flow_thin] (genDL.south) -- ++(0,-0.2) -| (llm.west);
+\draw[flow_thin] (genDR.south) -- ++(0,-0.2) -| (llm.east);
+
+% --- User ---
+\node[user_style] (user) at (10.5, -10.2) {User};
+
+% Arrows User <-> LLM
+\draw[flow, line width=1pt] (llm.east) -- node[above, font=\tiny] {Response} (user.west);
+\draw[flow_thin, dashed] (user.south) -- ++(0,-0.3) -| node[below, font=\tiny, pos=0.25] {Prompt} (llm.south);
+
+% ============================================================
+% LEGEND — Defense-in-Depth Layers
+% ============================================================
+\node[font=\scriptsize\sffamily\bfseries] at (1.5, -11.3) {Defense-in-Depth:};
+
+\node[legend_box, draw=green!50!black, fill=green!8] (leg1) at (4.0, -11.3) {Layer 1: FL -- Data stays local};
+\node[legend_box, draw=blue!60!black, fill=blue!5] (leg2) at (7.2, -11.3) {Layer 2: KD -- Only logits shared};
+\node[legend_box, draw=red!70!black, fill=red!5, line width=0.8pt] (leg3) at (10.2, -11.3) {$\bigstar$ Layer 3: DP-SGD -- $(\varepsilon,\delta)$-DP};
+\node[legend_box, draw=purple!60!black, fill=purple!5] (leg4) at (13.2, -11.3) {Layer 4: HE -- Encrypted transit};
+
+\end{tikzpicture}

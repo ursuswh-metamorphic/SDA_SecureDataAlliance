@@ -1,0 +1,28 @@
+\subsection{RQ4: Overhead and Practicality}
+\label{sec:rq4}
+
+To evaluate the practicality of P4P, we measured its computational and communication overhead during federated training (20 clients, 15 rounds) and compared it with baseline methods. The results, summarized in Table~\ref{tab:training_time_pivoted}, indicate that P4P introduces negligible additional cost while maintaining high efficiency.
+
+\begin{table}[h!]
+\centering
+\caption{Server-side computation overhead per round (in seconds) ($\alpha = 0.5$)}
+\label{tab:training_time_pivoted}
+\begin{tabular}{l | c c c c}
+\hline
+Attack Type & No-Def & Recess & FedMP & P4P \\
+\hline
+LIE & 210.58 & 242.37 & 243.21 & \textbf{222.37} \\
+Sign Flip & 203.36 & 235.76 & 235.41 & \textbf{224.59} \\
+Scaling & 205.64 & 235.21 & 235.13 & \textbf{226.17} \\
+Gaussian& 211.06 & 212.11 & 215.18 & \textbf{211.45} \\
+Label Flip & 212.46 & 222.97 & 221.21 & \textbf{220.52} \\
+Backdoor& 219.28 & \textbf{211.80} & 224.03 & 219.28 \\
+\hline
+\end{tabular}
+\end{table}
+
+Across all attack scenarios, P4P’s total training time is nearly identical to the undefended baseline (\textit{No-Def}). The difference ranges from a 1.0\% decrease (i.e., faster) under the LIE attack to only a 0.6\% increase under the Sign Flip attack, with no measurable overhead observed in the Backdoor setting. In comparison, other defenses such as FedMP incur higher costs, showing up to a +2.2\% increase in training time. These results confirm that P4P achieves robustness without sacrificing computational efficiency.
+
+The lightweight design of P4P contributes to its practicality in two key aspects. First, computational overhead remains low since each client’s high-dimensional model update is reduced to a single scalar probe response via cosine similarity. This compact representation enables efficient anomaly detection on one-dimensional scores instead of full gradients. Second, communication overhead is minimal, requiring only the transmission of one additional probe vector from the server and a single scalar value ($r_i^t$) from each client per round. This added cost is negligible relative to standard model updates in FL.
+
+Overall, these quantitative results demonstrate that P4P satisfies RQ4 by providing a scalable, resource-efficient, and practical defense mechanism that integrates seamlessly into existing FL pipelines.

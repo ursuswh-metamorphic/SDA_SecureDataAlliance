@@ -1,0 +1,192 @@
+% =====================================================================
+% fig_workflow_bridge.tex
+% DP-FedRAG Workflow drawn in the academic "Cross-Chain Bridge" style.
+% Two stacked sub-workflows:
+%   (a) Upstream  — Privacy-Preserving Federated Embedding Pre-training
+%   (b) Downstream — Privacy-Preserving RAG Inference
+%
+% Required preamble in the main document:
+%   \usepackage{tikz}
+%   \usepackage{amsmath, amssymb}
+%   \usepackage{fontawesome5}
+%   \usetikzlibrary{positioning, arrows.meta, shapes, fit, backgrounds, calc}
+%
+% Usage inside a figure*:
+%   \begin{figure*}[t]\centering
+%       \input{figures/fig_workflow_bridge}
+%       \caption{DP-FedRAG Workflow.}
+%       \label{fig:dpfedrag-workflow}
+%   \end{figure*}
+% =====================================================================
+
+\begin{tikzpicture}[
+    >=Stealth,
+    font=\footnotesize\sffamily,
+    %% Block styles ----------------------------------------------------
+    block/.style    ={draw, rectangle, rounded corners=1pt, align=center,
+                      minimum height=7mm, text width=22mm, inner sep=2pt,
+                      font=\scriptsize\sffamily},
+    gblock/.style   ={block, fill=black!12},
+    cblock/.style   ={block, fill=white},
+    eblock/.style   ={block, fill=black!22, font=\scriptsize\sffamily\bfseries},
+    %% Panels (dashed boundary) ----------------------------------------
+    panel/.style    ={draw, dashed, rounded corners=2pt, inner sep=8pt},
+    paneltitle/.style={font=\small\sffamily\bfseries},
+    %% Arrows ----------------------------------------------------------
+    plain/.style    ={->, thick},
+    secure/.style   ={->, thick, dashed},
+    %% Step labels -----------------------------------------------------
+    step/.style     ={font=\scriptsize\sffamily, fill=white, inner sep=1pt},
+    actor/.style    ={font=\Large}
+]
+
+% =====================================================================
+% (a) UPSTREAM : Federated Embedding Pre-training
+% =====================================================================
+% Three panels are placed with absolute X coordinates so they never
+% overlap.  Inner nodes use absolute coordinates as well.
+%   Panel A1 (Hospital A) : x = 0  .. 5.5
+%   Panel A2 (FL Server)  : x = 7.0 .. 10.0
+%   Panel A3 (Hospital N) : x = 11.5 .. 17.0
+% ---------------------------------------------------------------------
+
+%% --- Panel A1 : Hospital A ------------------------------------------
+\node[actor] (a_user)               at (0.5, -2.0) {\faHospital};
+\node[font=\scriptsize, below=0pt of a_user] {Hospital A};
+
+\node[gblock] (a_gemb)              at (3.0, -0.6)  {Global RAG\\Embedding};
+\node[cblock] (a_lemb)              at (5.6, -0.6)  {Local RAG\\Embedding};
+\node[cblock] (a_data)              at (3.0, -2.0)  {Private\\Medical Data};
+\node[cblock] (a_loss)              at (4.3, -3.2)  {KD + Contrastive\\Loss};
+\node[eblock] (a_dp)                at (4.3, -4.4)  {DP-SGD\\Clip + Noise};
+\node[gblock] (a_he)                at (4.3, -5.6)  {CKKS\\Enc($\Delta_A$)};
+
+\draw[<->, thick, dashed]   (a_gemb) -- node[step,above]{KD-GLE} (a_lemb);
+\draw[plain]                (a_lemb.south) -- (a_loss.north east);
+\draw[plain]                (a_data.east) -- (a_loss.west);
+\draw[plain]                (a_loss) -- node[step,right]{1.\,backward} (a_dp);
+\draw[plain]                (a_dp)   -- node[step,right]{2.\,encrypt}  (a_he);
+
+%% --- Panel A2 : FL Server -------------------------------------------
+\node[actor] (a_srv)                at (8.5, -1.0) {\faServer};
+\node[font=\scriptsize, above=0pt of a_srv] {FL Server};
+\node[gblock] (a_agg)               at (8.5, -3.2) {FedAvg\\Aggregation};
+\node[gblock] (a_gm)                at (8.5, -4.6) {Global\\Model $W_{\text{global}}$};
+\draw[plain] (a_agg) -- (a_gm);
+
+%% --- Panel A3 : Hospital N ------------------------------------------
+\node[actor] (n_user)               at (16.5, -2.0) {\faHospital};
+\node[font=\scriptsize, below=0pt of n_user] {Hospital $N$};
+
+\node[gblock] (n_gemb)              at (14.0, -0.6) {Global RAG\\Embedding};
+\node[cblock] (n_lemb)              at (11.4, -0.6) {Local RAG\\Embedding};
+\node[cblock] (n_data)              at (14.0, -2.0) {Private\\Medical Data};
+\node[cblock] (n_loss)              at (12.7, -3.2) {KD + Contrastive\\Loss};
+\node[eblock] (n_dp)                at (12.7, -4.4) {DP-SGD\\Clip + Noise};
+\node[gblock] (n_he)                at (12.7, -5.6) {CKKS\\Enc($\Delta_N$)};
+
+\draw[<->, thick, dashed]   (n_gemb) -- node[step,above]{KD-GLE} (n_lemb);
+\draw[plain]                (n_lemb.south) -- (n_loss.north west);
+\draw[plain]                (n_data.west) -- (n_loss.east);
+\draw[plain]                (n_loss) -- node[step,left]{1.\,backward} (n_dp);
+\draw[plain]                (n_dp)   -- node[step,left]{2.\,encrypt}  (n_he);
+
+%% --- Cross-panel arrows : Client <-> Server -------------------------
+% Encrypted gradients UP to server (dashed, secure)
+\draw[secure] (a_he.north east) to[bend left=15]
+              node[step, sloped, above]{3.\,Send $\mathrm{Enc}(\Delta_A)$} (a_agg.south west);
+\draw[secure] (n_he.north west) to[bend right=15]
+              node[step, sloped, above]{3.\,Send $\mathrm{Enc}(\Delta_N)$} (a_agg.south east);
+
+% Broadcast global model DOWN to clients (plain)
+\draw[plain]  (a_gm.west) to[bend right=18]
+              node[step, sloped, below]{4.\,Broadcast $W_{\text{global}}$} (a_gemb.south east);
+\draw[plain]  (a_gm.east) to[bend left=18]
+              node[step, sloped, below]{4.\,Broadcast $W_{\text{global}}$} (n_gemb.south west);
+
+%% --- Panels A1/A2/A3 dashed boundaries ------------------------------
+\begin{scope}[on background layer]
+    \node[panel, fit=(a_user)(a_gemb)(a_lemb)(a_data)(a_loss)(a_dp)(a_he),
+          label={[paneltitle]above:Hospital A (FL Client)}]   (panelA1) {};
+    \node[panel, fit=(a_srv)(a_agg)(a_gm),
+          label={[paneltitle]above:FL Server (Aggregator)}]   (panelA2) {};
+    \node[panel, fit=(n_user)(n_gemb)(n_lemb)(n_data)(n_loss)(n_dp)(n_he),
+          label={[paneltitle]above:Hospital $N$ (FL Client)}] (panelA3) {};
+\end{scope}
+
+%% --- Section title (a) --------------------------------------------
+\node[font=\small\sffamily\bfseries] at (8.5, 1.4)
+      {(a) Upstream\,: Privacy-Preserving Federated Embedding Pre-training};
+
+% =====================================================================
+% (b) DOWNSTREAM : Privacy-Preserving RAG Inference
+% Placed below upstream with a comfortable vertical gap.
+%   Panel B1 (User Side)    : x = 0   .. 4.5
+%   Panel B2 (Coordinator)  : x = 6.0 .. 10.0
+%   Panel B3 (Hospital A)   : x = 11.5 .. 17.0
+% Vertical band  : y = -8.5 .. -14.5
+% =====================================================================
+
+%% --- Panel B1 : User Side -------------------------------------------
+\node[actor] (b_user)               at (0.4, -10.5) {\faUser};
+\node[font=\scriptsize, below=0pt of b_user] {User};
+
+\node[gblock] (b_gw)                at (3.0, -10.0) {Privacy\\Gateway};
+\node[cblock] (b_pii)               at (3.0, -11.5) {PII Detection\\(Presidio)};
+
+\draw[plain]  (b_user.east) -- node[step,above]{1.\,Prompt}              (b_gw.west);
+\draw[plain]  (b_gw)        -- (b_pii);
+
+%% --- Panel B2 : Coordinator ----------------------------------------
+\node[gblock] (b_llm)               at (8.0, -10.0) {Global LLM\\Fusion};
+\node[gblock] (b_route)             at (8.0, -11.5) {RagRoute\\Query Routing};
+
+\draw[secure] (b_pii.east) -- node[step,above]{2.\,Sanitized Prompt}     (b_llm.west|-b_pii);
+\draw[plain]  (b_llm) -- (b_route);
+
+%% --- Panel B3 : Hospital A (FL Client at inference) -----------------
+\node[actor]  (b_hosp)              at (16.5, -13.5) {\faHospital};
+\node[font=\scriptsize, below=0pt of b_hosp] {Hospital A};
+
+\node[gblock] (b_emb)               at (12.5, -9.5)  {DP-Trained\\Embedding};
+\node[cblock] (b_ret)               at (15.5, -9.5)  {FAISS +\\LlamaIndex};
+\node[cblock] (b_sum)               at (15.5, -11.0) {Privacy-aware\\Summarization};
+\node[cblock] (b_gen)               at (15.5, -12.5) {Generation\\Model};
+
+\draw[plain]  (b_route.east) -- node[step,above]{3.\,Routed Query} (b_emb.west);
+\draw[plain]  (b_emb) -- node[step,above]{4.\,Encode}              (b_ret);
+\draw[plain]  (b_ret) -- node[step,right]{5.\,Top-$k$ Docs}        (b_sum);
+\draw[plain]  (b_sum) -- node[step,right]{6.\,Summary}             (b_gen);
+
+%% --- Backward flow : Hospital -> Coordinator -> Gateway -> User -----
+\draw[plain]  (b_gen.west) -- ++(-2.0,0) |-
+              node[step, below, pos=0.20]{7.\,Local Response} (b_route.east);
+\draw[secure] (b_llm.north) to[bend left=20]
+              node[step, sloped, above]{8.\,Raw Response} (b_gw.north);
+\draw[plain]  (b_gw.south) -- ++(0,-1.2) -|
+              node[step, below, pos=0.18]{9.\,Filtered Response} (b_user.south);
+
+%% --- Panels B1/B2/B3 dashed boundaries ------------------------------
+\begin{scope}[on background layer]
+    \node[panel, fit=(b_user)(b_gw)(b_pii),
+          label={[paneltitle]above:User Side}]                (panelB1) {};
+    \node[panel, fit=(b_llm)(b_route),
+          label={[paneltitle]above:Coordinator}]              (panelB2) {};
+    \node[panel, fit=(b_hosp)(b_emb)(b_ret)(b_sum)(b_gen),
+          label={[paneltitle]above:Hospital A (FL Client)}]   (panelB3) {};
+\end{scope}
+
+%% --- Section title (b) --------------------------------------------
+\node[font=\small\sffamily\bfseries] at (8.5, -7.6)
+      {(b) Downstream\,: Privacy-Preserving RAG Inference};
+
+% =====================================================================
+% LEGEND
+% =====================================================================
+\node[font=\scriptsize\sffamily, anchor=west] (legend) at (0.0, -15.6) {%
+    \tikz[baseline=-0.6ex]{\draw[plain] (0,0) -- (0.55,0);}\,plain (in-clear) flow
+    \quad\quad
+    \tikz[baseline=-0.6ex]{\draw[secure] (0,0) -- (0.55,0);}\,secure / privacy-protected flow
+};
+
+\end{tikzpicture}

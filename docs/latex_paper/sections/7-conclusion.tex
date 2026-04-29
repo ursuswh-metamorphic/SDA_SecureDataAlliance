@@ -1,0 +1,14 @@
+\section{Conclusion} 
+\label{sec_conclusion}
+
+In this paper, we addressed the critical vulnerability of Federated Learning (FL) to model poisoning attacks, a challenge significantly amplified in realistic non-IID data environments. Existing defense mechanisms are often passive, computationally expensive, or struggle to distinguish between malicious updates and benign statistical diversity, leading to high false-positive rates. To overcome these limitations, we introduced P4P (Probe for Poisoning), a proactive, lightweight, and multi-layer defense framework.
+
+The core innovation of P4P is the probe vector, generated from the global model's own historical trajectory, which serves as a common reference to actively query clients. By evaluating the directional consistency of each client's update via a simple cosine similarity response, P4P transforms a high-dimensional analysis problem into a lightweight, one-dimensional anomaly detection task. This proactive probing is integrated into a multi-layer defense pipeline, combining L2-norm filtering, ensemble anomaly detection, and a temporal suspicion scoring system to effectively counter a wide spectrum of attacks.
+
+Our comprehensive experiments demonstrate that P4P significantly enhances the robustness of FL systems. It consistently maintains high model accuracy and stable convergence under various sophisticated poisoning attacks, including sign-flipping, label-flipping, and backdoors, where undefended models collapse. Crucially, P4P demonstrates strong resilience in highly heterogeneous non-IID settings, successfully identifying adversarial behavior without penalizing benign clients. Furthermore, its design ensures negligible computational and communication overhead, making it a practical and scalable solution for real-world, resource-constrained environments like IoT-based Intrusion Detection Systems. P4P represents a significant step towards building more secure and trustworthy decentralized machine learning systems.
+
+\section*{Acknowledgement}
+
+This research is funded by Vietnam National University HoChiMinh City (VNU-HCM) under grant number NCM2025-26-01.
+
+% This work was supported by the VNUHCM–University of Information Technology's Scientific Research Support Fund.

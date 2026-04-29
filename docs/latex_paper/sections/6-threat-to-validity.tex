@@ -1,0 +1,20 @@
+\section{Threats to Validity}
+\label{sect_threats_tovalidity}
+
+In this section, we discuss potential threats that may affect the validity of our experimental findings. These threats are categorized into internal and external validity concerns.
+
+\subsection{Internal Validity}
+
+\textit{Non-IID Data Emulation.}
+Although we employ a Dirichlet distribution to emulate non-IID client behavior, this approximation may not fully capture the complex heterogeneity observed in real-world IoT networks. A critical challenge remains in differentiating between a malicious client and a benign client whose data distribution is naturally rare or highly skewed. Consequently, there is a residual risk that the probing mechanism in P4P may inadvertently penalize benign outliers.
+
+\textit{Dataset Representativeness.}
+The IoTDIAD and ACI-IoT datasets serve as widely used benchmarks; however, they represent static traffic snapshots. These datasets may not adequately reflect the dynamic and rapidly evolving landscape of IoT devices and emerging attack vectors. This limitation may affect the generalizability of our results to real-world deployment scenarios.
+
+\subsection{External Validity}
+
+\textit{Attack Realism.}
+The poisoning attacks evaluated in this study are derived from established academic methodologies. In real-world scenarios, adaptive adversaries can craft more sophisticated strategies specifically tailored to subvert probe-based defenses. Such advanced adversarial behaviors were not modeled in our experiments, which may limit the external realism of the evaluated threats.
+
+\textit{Reproducibility.}
+Although we release all source code, configurations, and datasets to promote reproducibility, variations in computational environments and the inherent stochasticity of FL may lead to slight deviations in reported results across different runs.

@@ -1,0 +1,31 @@
+\subsection{RQ3: Component Contribution}
+\label{subsec:ablation}
+
+\begin{table*}[t]
+\centering
+\caption{Extended Ablation Study on the IoTDIAD dataset ($\alpha = 0.5$). ASR denotes Attack Success Rate.}
+\label{tab:ablation_extended}
+\begin{tabular}{lcccccccc}
+\toprule
+Variant 
+& \multicolumn{2}{c}{Sign-Flip} 
+& \multicolumn{2}{c}{LIE} 
+& \multicolumn{2}{c}{Gaussian} 
+& \multicolumn{2}{c}{Backdoor} \\ 
+\cmidrule(lr){2-9}
+& Acc (\%) & ASR (\%) & Acc (\%) & ASR (\%) & Acc (\%) & ASR (\%) & Acc (\%) & ASR (\%) \\
+\midrule
+No Defense   & 10.09 & 89.91 & 9.80 & 90.20 & 26.15 & 73.85 & 14.69 & 82.45 \\
+w/o PV       & 86.22 & 14.78 & 88.35 & 11.75 & 79.21 & 20.79 & 87.28 & 18.61 \\
+w/o L2F      & 88.01 & 12.99 & 91.36 & 8.73  & 92.63 & 7.36  & 91.72 & 11.03 \\
+w/o TS       & 92.69 & 7.31  & 92.25 & 7.65  & 92.89 & 7.11  & 91.30 & 9.87  \\
+Full P4P     & \textbf{95.91} & \textbf{4.19}  & \textbf{94.25} & \textbf{5.75}  & \textbf{92.97} & \textbf{7.03}  & \textbf{95.59} & \textbf{5.18}  \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+To further assess the contribution of each major component in the P4P framework, we expand the ablation analysis to include six representative poisoning strategies: Sign-Flip, LIE, Gaussian Noise, and Backdoor. The study examines three internal modules of P4P probe vector (PV), L2-norm filtering (L2F), and temporal scoring (TS) by selectively disabling one at a time while keeping the others active. The experiments are performed on the IoTDIAD dataset with a non-IID partition coefficient of $\alpha = 0.5$. Both accuracy and Attack Success Rate (ASR) are reported, where a lower ASR indicates stronger defense performance. Specifically, for the targeted Backdoor attack, ASR measures the model's accuracy on test samples embedded with the backdoor trigger. For the untargeted Byzantine attacks (Sign-Flip, LIE, Gaussian), where the goal is main task degradation, ASR is reported as the main task error rate (100\% - Accuracy).
+
+The results in Table~\ref{tab:ablation_extended} clearly demonstrate that the complete P4P configuration provides consistent robustness across all six attack types. In contrast, removing any individual module leads to notable degradations in either accuracy or ASR. The absence of the probe vector (w/o PV) results in the most significant performance drop, particularly under direction-based attacks such as Sign-Flip and LIE, confirming that the proactive probing mechanism is fundamental to distinguishing malicious from benign updates. Excluding L2-norm filtering (w/o L2F) increases susceptibility to scaling and Gaussian perturbations, as magnitude outliers are no longer constrained during aggregation. Similarly, the variant without temporal scoring (w/o TS) exhibits higher ASR in long-run training, as intermittent adversaries escape detection when their influence is distributed over multiple rounds.
+
+Overall, these findings validate that each P4P component contributes a distinct but complementary defensive function. The probe vector ensures directional integrity, the L2-norm filter stabilizes aggregation against extreme gradient magnitudes, and the temporal scoring mechanism provides cumulative robustness against stealthy, slow-acting attacks. Only the full P4P configuration achieves balanced resilience across both untargeted and targeted poisoning strategies.

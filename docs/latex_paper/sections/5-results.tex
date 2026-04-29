@@ -1,0 +1,40 @@
+\section{Results and Analysis} \label{sect_results}
+
+\input{sections/5-1-RQ1}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.99\linewidth]{images/RQ2_1.png}
+\caption{Accuracy comparison under six Byzantine attacks and different degrees of Non-IID on IoTDIAD dataset}
+\label{fig:non_iid_robustness1}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.99\linewidth]{images/RQ2_2.png}
+\caption{Accuracy comparison under six Byzantine attacks and different degrees of Non-IID on ACI-IoT dataset}
+\label{fig:non_iid_robustness2}
+\end{figure*}
+
+\input{sections/5-2-RQ2}
+\input{sections/5-3-RQ3}
+\input{sections/5-4-RQ4}
+
+\subsection{Summary of Findings}
+
+P4P consistently demonstrates superior defense capability across six distinct poisoning strategies, confirming its versatility against data, magnitude, and direction-based attacks. Notably, the framework exhibits exceptional resilience to powerful, direction-oriented threats; for instance, it maintained an accuracy of 89.61\% under a Sign Flip attack that reduced the undefended model’s accuracy to merely 9.80\%.
+
+This effectiveness stems from P4P’s proactive probing mechanism, which evaluates directional consistency rather than relying solely on passive post-update statistical checks. Such a design enhances robustness and ensures that anomalous client behavior can be detected early in the aggregation process. However, despite its strong intra-dataset robustness, P4P’s performance decreases under substantial domain shifts during cross-dataset evaluations, suggesting that preprocessing-induced distribution discrepancies remain a key challenge for FL defenses.
+
+
+\subsection{Limitations of Existing Defense Paradigms} 
+
+Despite notable progress in federated learning defenses, current paradigms exhibit fundamental limitations that arise from their underlying design philosophies, and these limitations manifest differently across the four main categories. 
+
+Robust aggregation and clustering-based methods, such as FedAMM \cite{11175562} and FedMP \cite{ZHAO2025110990}, rely on statistical consistency among client updates. This assumption fails in heterogeneous Non-IID environments, where benign clients may naturally deviate from the majority trend in ways that resemble adversarial behavior. Without a global semantic reference, these approaches cannot reliably differentiate malicious deviation from legitimate heterogeneity, resulting in unstable detection and susceptibility to false positives. A similar limitation is observed in cryptographic and audit-based mechanisms such as TMT-FL \cite{10812212} and DPAD \cite{BASAK2025109893}, which ensure structural integrity of updates-verifying that submitted gradients match the committed values, but do not evaluate whether these updates align with the underlying optimization trajectory. Consequently, these methods remain blind to semantic poisoning that is embedded within statistically valid updates. 
+
+Proactive and reputation-based defenses (e.g., RECESS \cite{yan2025recess}) address some of these issues by actively probing clients or accumulating evidence over multiple rounds. However, such mechanisms introduce sensitivity to adaptive adversaries, who may manipulate their behavior to temporarily mimic honest clients and gradually evade detection. Furthermore, the additional probing overhead can become prohibitive in large-scale federated deployments with resource-constrained IoT devices. 
+
+Hybrid frameworks, including MSGuard \cite{yang2025msguard}, FLGuardian \cite{zhou2025flguardian}, and FLANDERS \cite{11164345}, attempt to combine multiple detection signals to improve robustness under diverse attack scenarios. While effective in controlled settings, these systems often suffer from high computational complexity and limited temporal awareness, as client behavior is typically assessed at the round level without modeling long-term consistency across training trajectories. As a result, stealthy adversaries that gradually adapt their updates over time can still bypass detection. 
+
+In summary, robust and hybrid defenses struggle primarily with the absence of a global semantic reference and their vulnerability to Non-IID divergence; proactive methods alleviate this issue but introduce new challenges related to adaptivity and communication overhead; and cryptographic mechanisms, although strong in structural guarantees, do not address the semantic nature of poisoning. These collective limitations motivate the development of a lightweight, temporally aware, and semantically grounded defense strategy, which forms the basis of our proposed P4P framework.

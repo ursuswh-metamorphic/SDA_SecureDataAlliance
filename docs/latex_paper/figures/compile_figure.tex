@@ -1,0 +1,17 @@
+% Standalone file to compile the architecture diagram
+% Compile: pdflatex compile_figure.tex
+% Convert to PNG: magick -density 300 compile_figure.pdf compile_figure.png
+%   or: pdftoppm -png -r 300 compile_figure.pdf compile_figure
+
+\documentclass[border=10pt]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, calc, backgrounds, patterns}
+
+% Define missing color
+\definecolor{indigo}{RGB}{63, 81, 181}
+
+\begin{document}
+\input{fig_architecture}
+\end{document}

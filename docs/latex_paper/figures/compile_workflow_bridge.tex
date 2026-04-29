@@ -1,0 +1,18 @@
+% Standalone wrapper to compile fig_workflow_bridge.tex on its own.
+% Compile:
+%   pdflatex compile_workflow_bridge.tex
+% Convert to PNG (300 DPI):
+%   pdftoppm -png -r 300 compile_workflow_bridge.pdf workflow_bridge
+% (or)
+%   magick -density 300 compile_workflow_bridge.pdf workflow_bridge.png
+
+\documentclass[border=10pt]{standalone}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{tikz}
+\usepackage{fontawesome5}
+\usetikzlibrary{positioning, arrows.meta, shapes, fit, backgrounds, calc}
+
+\begin{document}
+\input{fig_workflow_bridge}
+\end{document}

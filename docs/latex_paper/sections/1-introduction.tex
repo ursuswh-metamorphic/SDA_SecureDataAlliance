@@ -1,0 +1,43 @@
+\section{Introduction} \label{sec_introduction}
+...
+
+In summary, our main contributions are as follows:
+\begin{itemize}
+\item bbbb.
+\item bbbbbb
+\item bbbbmm
+\item vvv.
+\end{itemize}
+
+The remainder of this article is organized as follows. Section \ref{sect_relatedworks} presents the related work. Section \ref{sect:methodology} describes the proposed methodology in detail. Next, Section \ref{sec_experiment} presents the dataset and experimental setup, followed by Section \ref{sect_results} with performance evaluation and analysis. We discuss threats to validity in Section \ref{sect_threats_tovalidity}. Finally, Section \ref{sec_conclusion} concludes the article and outlines future directions.
+
+\begin{table*}[ht]
+\centering
+\caption{Comparison of Federated Learning Defense Mechanisms (Simplified)}
+\label{tab:compare}
+\small
+\begin{tabular}{l l l c c c c c}
+\toprule
+\textbf{Method} & \textbf{Defense Type} & \textbf{Attack Type} & \textbf{Clean Data} & 
+\textbf{Non-IID} & \textbf{Overhead} & \textbf{Temporal} & \textbf{Multi-layer} \\
+\midrule
+FedAMM \cite{11175562}     & Robust + Clustering & Backdoor (majority) & No  & High   & High   & No  & Yes \\
+TMT-FL \cite{lu2025tmtfl}    & Cryptographic (ZKP) & Data/model poison   & No  & Low    & High   & Yes & Yes \\
+RECESS \cite{yan2025recess}     & Proactive + Robust  & Model poison (MPA)  & No  & Medium & Medium & Yes & Part \\
+DPAD \cite{BASAK2025109893}       & Audit-based         & Data poisoning      & Yes & Low    & High   & No  & No \\
+MSGuard \cite{yang2025msguard}    & Multi-strategy      & Sign, ALIE, MinMax  & No  & Medium & High   & No  & No \\
+FLGuardian \cite{zhou2025flguardian} & Layer detection     & Backdoor (layer)    & No  & Medium & Medium & Yes & Yes \\
+FedCleanse \cite{HUANG2025114494} & Post-agg, Neuron    & Backdoor (replace)  & No  & High   & Low    & Yes & Yes \\
+FedMP \cite{ZHAO2025110990}      & Multi-pronged       & Byzantine (SF,LIE)  & No  & High   & Medium & No  & No \\
+FLANDERS \cite{11164345}   & Pre-agg + Time-ser  & Untargeted poison   & No  & High   & High   & Yes & Part \\
+UDFed \cite{Deng2025UDFedAU}     & Hybrid Universal    & Noise, LIE, Backdoor& No  & Medium & Low    & Yes & Yes \\
+
+Fed-LSAE \cite{FedLSAE} & Latent-space (Pre-agg) & Label-flip, GAN, Weight-scale & No & High & Low & No & Part \\
+
+\textbf{P4P (ours)} & Proactive + Multi & Universal (Byz+BD) & No & High & Low & Yes & Yes \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+
+ 
