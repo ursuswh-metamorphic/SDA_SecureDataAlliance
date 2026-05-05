@@ -110,6 +110,10 @@ class TaskPipe(BasicTaskPipe):
                 return self.dataset[[self.indices[i] for i in idx]]
             return self.dataset[self.indices[idx]]
 
+        def __getitems__(self, indices):
+            # torch >=2.11 requires Subset overrides to also implement __getitems__.
+            return [self.__getitem__(i) for i in indices]
+
     def save_task(self, generator):
         client_names = self.gen_client_names(len(generator.local_datas))
         feddata = {'client_names': client_names, 'server_data': list(range(len(generator.test_data))),

@@ -109,7 +109,13 @@ class Server(BasicServer):
             return
 
         sigma = _calibrate_sigma_quiet(self.option)
-        sample_rate = self.option['_dp_sample_rate']
+        # Recompute sample_rate inline (cheaper than caching, robust to flgo
+        # option-dict copying that may drop auxiliary keys between calls).
+        n_clients_for_rate = int(self.option.get('num_clients', 5))
+        clients_per_round_for_rate = int(
+            self.option.get('dp_clients_per_round', n_clients_for_rate)
+        )
+        sample_rate = clients_per_round_for_rate / max(1, n_clients_for_rate)
         target_eps = float(self.option.get('target_epsilon', 20.0))
         target_delta = float(self.option.get('target_delta', 1e-5))
         num_rounds = int(self.option.get('num_rounds', 25))
@@ -218,11 +224,21 @@ class Server(BasicServer):
             stacked = torch.stack([d[k].float() for d in lora_dicts], dim=0)
             averaged[k] = stacked.mean(dim=0)
 
-        # Apply averaged LoRA back into model_old, casting to existing dtype/device.
+        # Apply averaged LoRA back into model_old. Server.model is a
+        # fedllm.Model FModule wrapper whose state_dict prefixes every key with
+        # 'model.', while Client packs state_dict from PeftModel directly
+        # (no prefix). Detect and adjust.
         model_old_sd = model_old.state_dict()
+        prefix = ''
+        sample_key = next(iter(averaged))
+        if sample_key not in model_old_sd and ('model.' + sample_key) in model_old_sd:
+            prefix = 'model.'
         for k, v in averaged.items():
-            target = model_old_sd[k]
-            model_old_sd[k] = v.to(device=target.device, dtype=target.dtype)
+            full_k = prefix + k
+            if full_k not in model_old_sd:
+                continue   # base weights or stale/extra keys: leave alone
+            target = model_old_sd[full_k]
+            model_old_sd[full_k] = v.to(device=target.device, dtype=target.dtype)
         model_old.load_state_dict(model_old_sd, strict=False)
 
         print(f'[fedrag_lora.Server.aggregate] Averaged {len(averaged)} LoRA tensors '
@@ -246,6 +262,15 @@ class Server(BasicServer):
 # ══════════════════════════════════════════════════════════════════════════════
 
 class Client(BasicClient):
+    def __init__(self, option={}):
+        super().__init__(option)
+        # BasicClient.__init__ hardcodes self.model = BertModel.from_pretrained(...)
+        # (see fedbase.py:769) which bypasses our PEFT wrapping. Replace it here so
+        # Client.self.model has LoRA adapters and matches Server.model.model.
+        # Don't .to(device) — flgo's runner handles device placement later.
+        from flgo.benchmark.fedrag_classification.config import get_model
+        self.model = get_model()
+
     def train(self, model, local_model):
         """Train local LoRA adapters using the global model as KD teacher.
 
