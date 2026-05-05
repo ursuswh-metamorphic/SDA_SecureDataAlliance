@@ -306,7 +306,17 @@ class Client(BasicClient):
             self._train_plain(model, local_model, optimizer)
 
     def _train_plain(self, model, local_model, optimizer):
-        """Phase-1 non-DP training (mirror fedrag.Client.train:97-133)."""
+        """Phase-1 non-DP training (mirror fedrag.Client.train:97-133).
+
+        Builds its own AdamW optimizer (same rationale as _train_dp): flgo's
+        default SGD with lr=1e-5 is too weak to budge PEFT's zero-init lora_B
+        across 25 rounds, even without any DP noise. Override here so the
+        non-DP baseline actually learns — apples-to-apples vs the DP path.
+        """
+        params = [p for p in local_model.parameters() if p.requires_grad]
+        optimizer = torch.optim.AdamW(
+            params, lr=self.learning_rate, weight_decay=0.01,
+        )
         for it in range(self.num_steps):
             batch_data = self.get_batch_data()
             local_model.zero_grad()

@@ -71,6 +71,7 @@ option = {
     'batch_size': 16 if USE_QLORA else 8,
     'learning_rate': 1e-5,
     'num_clients': 5,
+    'num_steps': 50,          # cap per-round steps (mirrors main_dp_lora_eps20.py:87 — needed when client dataset is large, e.g. 43k records / 5 clients)
     'use_qlora': USE_QLORA,   # logged for traceability; actual gate is config.DEFAULT_USE_QLORA
 
     # ── Phase 2 DP knobs (mirror main_dp_lora_eps20.py:29-38) ─────────────
