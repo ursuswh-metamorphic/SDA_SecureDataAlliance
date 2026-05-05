@@ -330,7 +330,7 @@ class Client(BasicClient):
         For each step:
           1. Get a batch of size `bs`.
           2. For each sample i in [0, bs):
-               * forward + backward
+               * forward + backward on a per-sample-meaningful loss
                * compute per-sample L2 grad norm
                * clip: g_i ← g_i · min(1, C / ‖g_i‖)
                * accumulate
@@ -339,9 +339,21 @@ class Client(BasicClient):
           4. Post-noise stability: clip total grad norm to 1.0
           5. optimizer.step()
 
-        DP-SGD privacy: per-sample sensitivity ≤ C, Gaussian mechanism
-        with σ adds N(0, (σ·C)²) noise → (α, α·C²/(2σ²·C²))=(α, α/(2σ²))-RDP
-        per step, composed over T steps and amplified by sampling rate q.
+        IMPORTANT — loss choice for the per-sample inner loop:
+          The Phase-3 InfoNCE + KL loss is in-batch contrastive (relies on
+          B>=2 references to define positives/negatives). On a single sample
+          the softmax over a 1×1 logit row collapses to [1.0] and the loss
+          gradient is identically zero. With σ·C noise injected, the
+          accumulated update becomes pure noise — the model never learns,
+          retention stays at 100% of pretrained.
+
+          So in the DP path we mirror main_dp_lora_eps20.py:111-112:
+              loss_per_sample = 1 - cos_sim(q_emb, r_emb)
+          which gives a non-degenerate gradient for any bs >= 1. This
+          matches the validated 98.4 %-retention recipe at ε=20.
+
+          The Phase-3 InfoNCE+KL loss is still used by the non-DP path
+          (`_train_plain`) where bs > 1 makes the contrastive meaningful.
         """
         params = [p for p in local_model.parameters() if p.requires_grad]
         if not params:
@@ -358,6 +370,10 @@ class Client(BasicClient):
                 'check option[\'dp_enabled\'] and target_epsilon.'
             )
 
+        # Tokenizer is on the calculator (set up in TaskCalculator.__init__).
+        tokenizer = self.calculator.tokenizer
+        max_length = tokenizer.model_max_length
+
         log_every = max(1, self.num_steps // 5)
 
         for step in range(self.num_steps):
@@ -366,23 +382,32 @@ class Client(BasicClient):
             if bs == 0:
                 continue
 
+            # batch_data is a tuple (questions, answers, references) per
+            # FEDRAG.__getitem__. Pull the lists out once per batch.
+            questions = list(batch_data[0])
+            references = list(batch_data[2])
+
             accumulated = [torch.zeros_like(p.data) for p in params]
 
             for i in range(bs):
-                single = _get_single_sample(batch_data, i)
                 local_model.zero_grad()
 
-                # NOTE: compute_client_loss is in-batch contrastive
-                # (CrossEntropy on cosine sim + MSE distillation). On a
-                # single sample the contrastive part degenerates
-                # (label=[0], 1×1 logits), but DP-SGD only requires
-                # per-sample sensitivity bounds — degeneracy is acceptable.
-                # Phase 3 swaps loss to InfoNCE+KL but keeps this loop shape.
-                server_loss = self.calculator.compute_server_loss(model, single)
-                client_loss, _, _ = self.calculator.compute_client_loss(
-                    server_loss, local_model, single
-                )
-                client_loss.backward()
+                # Per-sample loss: 1 - cos(q_emb, r_emb). Non-degenerate at bs=1.
+                q_inp = tokenizer(
+                    [questions[i]], return_tensors='pt', padding=True,
+                    truncation=True, max_length=max_length,
+                ).to(self.device)
+                q_emb = local_model(**q_inp).last_hidden_state.mean(dim=1)
+
+                r_inp = tokenizer(
+                    [references[i]], return_tensors='pt', padding=True,
+                    truncation=True, max_length=max_length,
+                ).to(self.device)
+                r_emb = local_model(**r_inp).last_hidden_state.mean(dim=1)
+
+                sim = torch.nn.functional.cosine_similarity(q_emb, r_emb)
+                loss = 1.0 - sim.mean()
+                loss.backward()
 
                 # Per-sample L2 norm across all LoRA gradients.
                 per_sample_norm = _compute_grad_norm(params)
