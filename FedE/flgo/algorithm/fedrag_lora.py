@@ -65,11 +65,17 @@ def _calibrate_sigma_quiet(option: dict):
     given the same hyperparameters, so it does not matter whether they share
     the option dict or each have their own copy.
 
+    Cache uses a private key `_calibrated_dp_sigma` because flgo's init
+    pre-populates the well-known `dp_noise_multiplier` to its legacy default
+    of 0.1 (see fedrag.py:113), which we must NOT mistake for an already-
+    calibrated σ. We still write the calibrated value to `dp_noise_multiplier`
+    so downstream code (fedrag.py / fedrag_dp.py) reads the right value.
+
     Returns None when DP is disabled.
     """
     if not option.get('dp_enabled', False):
         return None
-    cached = option.get('dp_noise_multiplier')
+    cached = option.get('_calibrated_dp_sigma')
     if cached is not None:
         return cached
 
@@ -86,8 +92,8 @@ def _calibrate_sigma_quiet(option: dict):
         sample_rate=sample_rate,
         delta=target_delta,
     )
-    option['dp_noise_multiplier'] = sigma
-    option['_dp_sample_rate'] = sample_rate
+    option['_calibrated_dp_sigma'] = sigma     # private, our cache
+    option['dp_noise_multiplier'] = sigma      # public, for downstream readers
     return sigma
 
 
