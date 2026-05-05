@@ -327,6 +327,18 @@ class Client(BasicClient):
     def _train_dp(self, model, local_model, optimizer):
         """Phase-2 per-sample DP-SGD on LoRA params only.
 
+        Builds its own AdamW optimizer over LoRA-only params, ignoring the
+        SGD optimizer flgo created (its default). Why: with sigma=1.2940 and
+        clip_norm=0.1, the post-clipping per-coordinate update is tiny
+        (~1e-5). Plain SGD at lr=1e-5 multiplies that down further, leaving
+        lora_B (initialised to zero by PEFT) at ~1e-6 after 25 rounds — the
+        merged model is then bit-identical to base, retention 100% of
+        pretrained but no actual learning.
+
+        AdamW adapts the per-parameter learning rate based on gradient
+        history, so even small gradients accumulate into meaningful updates
+        — matching main_dp_lora_eps20.py:84 which uses AdamW directly.
+
         For each step:
           1. Get a batch of size `bs`.
           2. For each sample i in [0, bs):
@@ -369,6 +381,12 @@ class Client(BasicClient):
                 '[fedrag_lora.Client._train_dp] σ not calibrated; '
                 'check option[\'dp_enabled\'] and target_epsilon.'
             )
+
+        # Override flgo's default SGD with AdamW to match the standalone
+        # main_dp_lora_eps20.py recipe — see method docstring for rationale.
+        optimizer = torch.optim.AdamW(
+            params, lr=self.learning_rate, weight_decay=0.01,
+        )
 
         # Tokenizer is on the calculator (set up in TaskCalculator.__init__).
         tokenizer = self.calculator.tokenizer
