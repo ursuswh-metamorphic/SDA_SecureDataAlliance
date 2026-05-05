@@ -1,6 +1,7 @@
 import urllib
 import zipfile
 import torch
+import torch.nn.functional as F
 from torch.utils.data import TensorDataset, Dataset
 from transformers import BertTokenizer
 
@@ -21,7 +22,15 @@ import flgo.benchmark
 import os.path
 import torch
 
-from torch import nn
+# ── Phase 3 loss hyperparameters ──────────────────────────────────────────────
+# Module-level defaults so main_lora.py / main_full.py can override BEFORE
+# flgo.init() instantiates the TaskCalculator (which reads them at __init__).
+# Override pattern (in entrypoint script):
+#     from flgo.benchmark.fedrag_classification import core as fedrag_core
+#     fedrag_core.DEFAULT_TEMPERATURE = 0.05
+#     fedrag_core.DEFAULT_KD_WEIGHT = 1.0
+DEFAULT_TEMPERATURE = 0.05  # SimCSE / E5 / BGE retrieval default
+DEFAULT_KD_WEIGHT = 1.0     # was 100x for MSE; 1.0 is correct for KL (different magnitude)
 
 
 def collate_batch(batch):
@@ -52,7 +61,7 @@ class FEDRAG(Dataset):
     def __init__(self, train=True):
         self.train = train
         # TODO 加载数据集
-        with open("./pubmed_train.json", 'r', encoding='utf-8') as f:
+        with open("./selected_data.json", 'r', encoding='utf-8') as f:
             data = json.load(f)
 
         self.questions = []
@@ -76,7 +85,7 @@ class FEDRAG(Dataset):
 
 class TaskGenerator(BasicTaskGenerator):
     # TODO 加载数据集
-    def __init__(self, rawdata_path="./pubmed_train.json"):
+    def __init__(self, rawdata_path="./selected_data.json"):
         super(TaskGenerator, self).__init__(benchmark='fedrag_classification', rawdata_path=rawdata_path)
         # Regular expression to capture an actors name, and line continuation
 
@@ -133,7 +142,33 @@ class TaskCalculator(GeneralCalculator):
         # TODO 加载模型
         self.tokenizer = BertTokenizer.from_pretrained('BAAI/bge-base-en')
 
+        # Phase 3: read loss hyperparameters from module-level defaults at
+        # construction time. Entrypoint scripts override DEFAULT_TEMPERATURE /
+        # DEFAULT_KD_WEIGHT before calling flgo.init(...).
+        self.temperature = float(DEFAULT_TEMPERATURE)
+        self.kd_weight = float(DEFAULT_KD_WEIGHT)
+        print(f'[fedrag_classification.TaskCalculator] '
+              f'temperature={self.temperature}, kd_weight={self.kd_weight}')
+
     def compute_client_loss(self, server_logits, model, batch_data):
+        """
+        Phase 3 — formal loss decomposition:
+          * loss_1 = InfoNCE: temperature-scaled CE over in-batch cosine logits
+                     with diagonal labels (Q_i must match R_i).
+          * loss_2 = KD-GLE: KL divergence between student and teacher
+                     softmax distributions (server provides teacher logits).
+                     Multiplied by τ² following Hinton et al. (2015) so the
+                     gradient magnitude is preserved relative to the InfoNCE term.
+
+        Total: loss_1 + kd_weight * loss_2.
+
+        Notes:
+          * On a 1×1 batch (per-sample DP path), softmax([x])=[1.0] so both
+            terms degenerate to 0. This is acceptable for DP-SGD which only
+            requires per-sample sensitivity bounds.
+          * Legacy 100×MSE was an artefact of MSE's small magnitude; KL has
+            comparable scale to InfoNCE so kd_weight=1.0 is the right default.
+        """
         questions = batch_data[0]
         answers = batch_data[1]
         references = batch_data[2]
@@ -153,15 +188,26 @@ class TaskCalculator(GeneralCalculator):
         reference_pooled_tensors = torch.mean(reference_outputs.last_hidden_state, dim=1, keepdim=False)
 
         logits = cos_sim(question_pooled_tensors, reference_pooled_tensors)
-        logits.to(self.device)
+        logits = logits.to(self.device)
 
+        tau = self.temperature
         label = torch.arange(len(logits)).to(self.device)
-        criterion = nn.CrossEntropyLoss()
-        loss_1 = criterion(logits, label)
 
-        criterion2 = nn.MSELoss()
-        loss_2 = criterion2(logits, server_logits)
-        return loss_1 + 100 * loss_2, loss_1, loss_2
+        # ── Loss 1: InfoNCE (temperature-scaled in-batch contrastive) ────
+        loss_1 = F.cross_entropy(logits / tau, label)
+
+        # ── Loss 2: KD-GLE (KL divergence student || teacher, both softened) ─
+        # Move server_logits to the same device as logits to handle the
+        # case where server compute_server_loss ran on a different GPU/CPU.
+        teacher_logits = server_logits.to(self.device)
+        loss_2 = F.kl_div(
+            F.log_softmax(logits / tau, dim=-1),
+            F.softmax(teacher_logits / tau, dim=-1),
+            reduction='batchmean',
+        ) * (tau ** 2)
+
+        total = loss_1 + self.kd_weight * loss_2
+        return total, loss_1, loss_2
 
     def compute_server_loss(self, model, batch_data):
         questions = batch_data[0]

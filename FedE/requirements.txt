@@ -10,6 +10,25 @@ pyyaml
 pynvml
 numpy>=1.24.0
 
+# ── Phase 1 / 2 / 3: LoRA + DP loss ───────────────────────────────────────────
+# transformers + peft pinned because we hard-depend on PEFT's `get_peft_model`
+# and the BertModel API surface. Earlier these were transitively pulled in by
+# main_dp_lora_eps20.py without being declared.
+transformers>=4.36
+peft>=0.7.0
+huggingface_hub>=0.20
+
+# ── Phase 4: CKKS homomorphic aggregation (TenSEAL) ───────────────────────────
+# TenSEAL has wheels for CPython 3.8 — 3.12. On Python 3.13+ it must be
+# built from source (apt install build-essential cmake; pip install tenseal).
+# Marker leaves it optional on macOS arm64 / Python 3.13+ where wheels are absent.
+tenseal>=0.3.14; python_version < "3.13"
+
+# ── Phase 5: qLoRA (4-bit base via bitsandbytes) — Linux/Vast.ai only ─────────
+# bitsandbytes requires CUDA, so it is gated on Linux. Windows dev path
+# falls back to plain LoRA in flgo/benchmark/fedrag_classification/config.py.
+bitsandbytes>=0.43; sys_platform == "linux"
+
 # ── Differential Privacy ──────────────────────────────────────────────────────
 # Core DP accounting (no Opacus required — we implement RDP natively)
 # Optional: install for tighter PRV bounds and fast ghost clipping

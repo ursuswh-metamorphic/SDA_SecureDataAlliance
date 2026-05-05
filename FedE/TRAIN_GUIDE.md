@@ -1,7 +1,13 @@
 # Hướng Dẫn Chạy Upstream FedE — DP-FedRAG Training
 
-> **Phiên bản:** v2.0 (sau cải tiến DP)
-> **Cập nhật:** 2026-03-20
+> **Phiên bản:** v3.0 (Phase 1-6: LoRA + DP + InfoNCE/KL + FHE + qLoRA)
+> **Cập nhật:** 2026-05-05
+
+> Có sẵn **2 lộ trình**:
+> * Lộ trình cũ (v2.0) — main.py / main_dp.py / main_dp_lora_eps20.py — vẫn chạy được, để regression
+> * Lộ trình mới (v3.0) — main_lora.py / main_full.py — pipeline thống nhất qua flgo
+>
+> Xem [Section 11](#11-phase-runbook-v30) để chạy lộ trình mới.
 
 ---
 
@@ -17,6 +23,7 @@
 8. [Convert model sang finsaferag](#8-convert-model-sang-finsaferag)
 9. [Xử lý lỗi thường gặp](#9-xử-lý-lỗi-thường-gặp)
 10. [Bảng tham số đầy đủ](#10-bảng-tham-số-đầy-đủ)
+11. [Phase Runbook (v3.0 — pipeline thống nhất)](#11-phase-runbook-v30)
 
 ---
 
@@ -668,4 +675,127 @@ print('Saved:', name)
 "
 
 # 4. Update finsaferag config.toml với tên model mới
+```
+
+---
+
+## 11. Phase Runbook (v3.0)
+
+> **Khi nào dùng v3.0 thay vì v2.0?**
+> * Bạn cần **3 lớp bảo vệ cùng lúc** (FL + FHE + DP) trong một lần chạy.
+> * Bạn muốn pipeline chạy qua flgo framework (không phải standalone script).
+> * Bạn cần truyền tải nhỏ (~1.2 MB/round vs ~437 MB/round).
+
+### 11.1 Bản đồ entrypoint
+
+| File | Phase | Algorithm | Kích hoạt |
+|---|---|---|---|
+| `main.py` | v2.0 baseline | `fedrag.py` | full BertModel, no DP, no FHE |
+| `main_dp.py` | v2.0 DP | `fedrag_dp.py` | full BertModel + user-level DP |
+| `main_dp_lora_eps20.py` | v2.0 LoRA+DP | standalone (bypass flgo) | LoRA+DP, không qua flgo |
+| **`main_lora.py`** | **v3.0 P1+2+3+5** | `fedrag_lora.py` | LoRA + DP + InfoNCE/KL (+qLoRA Linux) |
+| **`main_full.py`** | **v3.0 P1-6** | `fedrag_lora_ckks.py` | tất cả các lớp + FHE thật sự |
+
+### 11.2 Chạy theo từng Phase
+
+**Phase 1 (smoke, no DP) — verify LoRA ship qua flgo:**
+```bash
+cd FedE
+python main_lora.py
+# Expect: payload ~1.2 MB / round, 25 rounds complete
+```
+
+**Phase 2 (LoRA + DP, regression target):**
+```bash
+DP_ENABLED=1 python main_lora.py
+# Expect: σ=1.2940, final ε ≤ 20, retention ±0.5% so với main_dp_lora_eps20.py
+```
+
+**Phase 3 (InfoNCE + KL):** đã tự động ON trong main_lora.py via
+`fedrag_core.DEFAULT_TEMPERATURE=0.05, DEFAULT_KD_WEIGHT=1.0`. Không cần env var.
+
+**Phase 4 (true homomorphic CKKS) — Linux only (TenSEAL wheels):**
+```bash
+# Phải có tenseal: pip install tenseal (Python 3.12 hoặc <)
+python main_full.py
+# FHE_ENABLED=1 by default. Server không decrypt; final cipher saved to checkpoints/
+```
+
+**Phase 5 (qLoRA 4-bit base) — Linux + CUDA + bitsandbytes:**
+```bash
+USE_QLORA=1 DP_ENABLED=1 python main_lora.py
+# Expect: VRAM ~1/3 so với Phase 2; batch_size 16 thay vì 8
+```
+
+**Phase 6 (full pipeline) — Linux + CUDA + tenseal + bitsandbytes:**
+```bash
+USE_QLORA=1 DP_ENABLED=1 FHE_ENABLED=1 python main_full.py
+# Expect: 3 lớp bảo vệ active; eps_spent ≤ 20; final cipher in checkpoints/final_cipher.pt
+```
+
+### 11.3 Decrypt final cipher (Phase 4/6 only)
+
+Server (Phase 6) chỉ giữ ciphertext sau training. Để evaluate cần một
+client (giữ secret key) decrypt:
+
+```bash
+python -c "
+import torch
+from FedE.flgo.algorithm.fedrag_ckks_primitives import _ensure_ctx, _chunked_decrypt
+secret_ctx, _ = _ensure_ctx()  # session-shared singleton; works only in same process
+blob = torch.load('checkpoints/final_cipher.pt')
+state = _chunked_decrypt(blob['cipher'], blob['manifest'], secret_ctx)
+print('Decrypted', len(state), 'LoRA tensors')
+torch.save(state, 'checkpoints/final_lora_decrypted.pt')
+"
+```
+> **Lưu ý cross-session**: TenSEAL secret key không tự survive across processes
+> trong implementation hiện tại. Để eval cipher từ một run khác, cần persist
+> secret context kèm `secret_ctx.serialize(save_secret_key=True)` — out-of-scope cho v3.0 PoC.
+
+### 11.4 Evaluate v3.0 checkpoints
+
+`eval_compare.py` đã được nâng cấp để tự động detect 3 format:
+
+```bash
+python eval_compare.py
+# Tự động xử lý:
+#   - x-model_*.bin           (v2.0 full BertModel state)
+#   - x-lora_*.bin             (v3.0 LoRA-only state, được merge_and_unload tự động)
+#   - x-model_lora_merged_*.bin (v2.0 merged from main_dp_lora_eps20.py)
+```
+
+Sửa các đường dẫn `load_model('xxx.bin', 'name')` trong `eval_compare.py:213-221`
+để chỉ tới checkpoints bạn vừa train.
+
+### 11.5 Validation tests
+
+```bash
+cd FedE
+# Phase 1 — LoRA filter (cần torch + transformers + peft)
+python tests/test_lora_filter.py
+# Expect: trainable=294,912, payload < 2 MB
+
+# Phase 3 — InfoNCE + KL sanity
+python tests/test_loss_phase3.py
+# Expect: 5/5 checks pass (KL=0 khi student==teacher, vv)
+
+# Phase 4 — CKKS cryptographic correctness (Linux + tenseal)
+python tests/test_ckks_correctness.py
+# Expect: max abs diff ≤ 1e-3 giữa encrypted-mean và plaintext-mean
+
+# Phase 5 — qLoRA gate
+python tests/test_qlora_gate.py
+# Expect: gate đúng theo platform; trainable=294,912 dù qLoRA on/off
+```
+
+### 11.6 Mapping 3 lớp bảo vệ ↔ Phase
+
+| Lớp | Bảo vệ chống | Implement bởi | Phase |
+|---|---|---|---|
+| **L1 — không chia sẻ data** | external attacker | flgo FL | 1-6 |
+| **L2 — không lộ gradient** | curious server | CKKS encrypt + homomorphic add | 4, 6 |
+| **L3 — không reverse được** | post-decrypt attacker | per-sample DP-SGD | 2, 6 |
+
+Phase 6 (`main_full.py`) là cái duy nhất kích hoạt cả 3 lớp đồng thời.
 ```

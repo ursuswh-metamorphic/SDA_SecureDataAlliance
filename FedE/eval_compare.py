@@ -198,15 +198,77 @@ def evaluate_model(model, model_name):
     }
 
 
+def _is_lora_only_checkpoint(state: dict) -> bool:
+    """Phase 6: detect a LoRA-only state_dict produced by fedrag_lora.Server.run.
+
+    LoRA-only checkpoints (~1.2 MB on disk) contain just lora_A / lora_B tensors;
+    a regular full BertModel state_dict has 199+ keys for the base.
+    """
+    if not state:
+        return False
+    keys = list(state.keys())
+    has_lora = any('lora' in k.lower() for k in keys)
+    has_base = any(
+        ('layer.0.attention.self.query.weight' in k or
+         'embeddings.word_embeddings.weight' in k)
+        for k in keys
+    )
+    return has_lora and not has_base
+
+
+def _apply_lora_state(base, lora_state):
+    """Wrap `base` (BertModel) with a fresh LoRA adapter, load lora_state into
+    the wrapper, then merge_and_unload to produce a regular BertModel ready
+    for evaluation. Mirror main_dp_lora_eps20.py:221-223."""
+    from peft import LoraConfig, get_peft_model
+    from flgo.benchmark.fedrag_classification.config import (
+        LORA_R, LORA_ALPHA, LORA_TARGETS, LORA_DROPOUT,
+    )
+    cfg = LoraConfig(
+        r=LORA_R, lora_alpha=LORA_ALPHA,
+        target_modules=LORA_TARGETS,
+        lora_dropout=LORA_DROPOUT, bias='none',
+    )
+    wrapped = get_peft_model(base, cfg)
+    missing, unexpected = wrapped.load_state_dict(lora_state, strict=False)
+    # On a LoRA-only checkpoint, ALL non-LoRA keys are "missing" — that's correct
+    # (those come from the frozen base). Only flag truly unexpected keys.
+    if unexpected:
+        print(f'    [WARN] unexpected LoRA keys (probably benign): {len(unexpected)}')
+    return wrapped.merge_and_unload()
+
+
 def load_model(path, name):
-    base = BertModel.from_pretrained('BAAI/bge-base-en')
+    """Phase 6: handles three checkpoint formats:
+
+      1. Legacy fedrag.py / fedrag_dp.py — full BertModel state_dict with
+         optional 'model.' prefix (~437 MB on disk).
+      2. main_dp_lora_eps20.py merged output — full BertModel state_dict
+         (already merged via merge_and_unload).
+      3. fedrag_lora.Server.run output — LoRA-only state_dict (~1.2 MB).
+         We re-wrap with PEFT, apply the LoRA state, then merge_and_unload.
+    """
     state = torch.load(path, map_location='cpu', weights_only=True)
+    base = BertModel.from_pretrained('BAAI/bge-base-en')
+
+    if _is_lora_only_checkpoint(state):
+        # Strip any 'model.' prefix that older checkpoints may carry
+        clean = {(k.replace('model.', '', 1) if k.startswith('model.') else k): v
+                 for k, v in state.items()}
+        merged = _apply_lora_state(base, clean)
+        print(f'Loaded {name}: format=LoRA-only ({len(clean)} keys, '
+              f'{sum(v.numel() for v in clean.values()):,} params); '
+              f'merged into BertModel for eval.')
+        return merged
+
+    # Full-base checkpoint: clean prefixes and load directly.
     clean = {}
     for k, v in state.items():
         key = k.replace('module.', '').replace('model.', '', 1) if 'model.' in k else k
         clean[key] = v
     missing, unexpected = base.load_state_dict(clean, strict=False)
-    print(f'Loaded {name}: missing={len(missing)}, unexpected={len(unexpected)}')
+    print(f'Loaded {name}: format=full-base, missing={len(missing)}, '
+          f'unexpected={len(unexpected)}')
     return base
 
 
