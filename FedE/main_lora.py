@@ -1,16 +1,21 @@
 """
-main_lora.py — Phase 1 + 2 + 3 + 5 entrypoint.
+main_lora.py — Phase 1 + 2 + 3 + 5 + paper-faithful Phase 6 entrypoint.
 
 Runs the FedRAG pipeline through the flgo framework using fedrag_lora.
-Defaults reproduce the validated standalone DP-LoRA recipe at
-main_dp_lora_eps20.py (eps=20, 25 rounds, 5 clients, clip_norm=0.1).
+Defaults follow the FedE4RAG paper (arXiv:2504.19101) §4.1:
+    rounds=50, batch_size=16, lr=1e-5, num_clients=5, clip_norm=0.1.
+σ for ε=20 at q=1.0, δ=1e-5 over 50 rounds is auto-calibrated (≈1.83).
+
+Loss path uses paper §3 RAG-FT (InfoNCE with τ=0.05) + KD-GLE (MSE on
+similarity matrices), not the legacy KL deviation. Both DP and non-DP
+paths share the same loss formulation.
 
 Env-var toggles:
-    DP_ENABLED=1    -> Phase 2 per-sample DP (must match 98.4% retention).
+    DP_ENABLED=1    -> per-sample DP (paper-faithful InfoNCE + MSE-KD-GLE).
     USE_QLORA=1     -> Phase 5 4-bit base (Linux/Vast.ai only; auto-disabled
                        on Windows or when bitsandbytes is missing).
 
-Phase 4 (FHE) and Phase 6 (full pipeline) live in main_full.py.
+Phase 4-FHE and Phase 6 (full pipeline) live in main_full.py.
 """
 import os
 import platform
@@ -62,16 +67,14 @@ if not os.path.exists(task):
 DP_ENABLED = os.environ.get('DP_ENABLED', '0') == '1'
 
 option = {
-    # FL hyperparameters
-    'num_rounds': 25,
+    # FL hyperparameters — paper §4.1 defaults
+    'num_rounds': 50,         # was 25; paper says 22 typically optimal but ε=20 budget allows 50
     'num_epochs': 1,
     'gpu': 0,
-    # Phase 5: qLoRA frees ~2/3 of VRAM, so we can double batch size from 8 → 16
-    # when 4-bit is active. Falls back to 8 on the non-quantized path.
-    'batch_size': 16 if USE_QLORA else 8,
+    'batch_size': 16,         # paper's stated optimal (vs 8/32). Per-sample DP loop runs B times so this scales encoding cost ~2× vs old batch=8 — tractable on RTX 6000 Ada (48GB) for BGE-base
     'learning_rate': 1e-5,
     'num_clients': 5,
-    'num_steps': 50,          # cap per-round steps (mirrors main_dp_lora_eps20.py:87 — needed when client dataset is large, e.g. 43k records / 5 clients)
+    'num_steps': 50,          # cap per-round steps (mirrors main_dp_lora_eps20.py:87 — needed when client dataset is large, e.g. 33k records / 5 clients)
     'use_qlora': USE_QLORA,   # logged for traceability; actual gate is config.DEFAULT_USE_QLORA
 
     # ── Phase 2 DP knobs (mirror main_dp_lora_eps20.py:29-38) ─────────────
@@ -91,8 +94,13 @@ option = {
 print(f'[main_lora] DP_ENABLED={DP_ENABLED}, USE_QLORA={USE_QLORA}, '
       f'eps={option["target_epsilon"]}, '
       f'rounds={option["num_rounds"]}, clients={option["num_clients"]}, '
-      f'batch={option["batch_size"]}, clip={option["dp_clip_norm"]}, '
+      f'batch={option["batch_size"]}, num_steps={option["num_steps"]}, '
+      f'clip={option["dp_clip_norm"]}, '
       f'tau={option["temperature"]}, kd_weight={option["kd_weight"]}')
+if DP_ENABLED:
+    print(f'[main_lora] DP: σ will be calibrated for {option["num_rounds"]} rounds, '
+          f'q={option["dp_clients_per_round"]}/{option["num_clients"]}=1.0, '
+          f'δ={option["target_delta"]}; expected σ≈1.83 for ε=20 over 50 rounds.')
 
 runner = flgo.init(task=task, algorithm=fedrag_lora, option=option)
 runner.run()

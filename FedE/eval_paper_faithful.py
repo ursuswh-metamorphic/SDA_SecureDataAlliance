@@ -32,6 +32,11 @@ CLI:
   --top-n        cutoff for retrieval (default: 100)
   --output-dir   where to dump JSON results (default: FedE/paper_test_data/eval_outputs/)
   --smoke        only first 5 queries × first 200 corpus pages (sanity check)
+  --rerank       enable cross-encoder rerank of top-n pages (Phase 5 optional;
+                 requires `sentence-transformers`; Linux/GPU recommended)
+  --rerank-model HF model id for the cross-encoder
+                 (default: cross-encoder/ms-marco-MiniLM-L-12-v2)
+  --rerank-batch batch size for cross-encoder predict (default: 32)
 """
 from __future__ import annotations
 
@@ -208,6 +213,106 @@ def retrieve_top_n(query_embs: torch.Tensor, corpus_embs: torch.Tensor,
     return indices, scores
 
 
+def rerank_with_cross_encoder(
+    model_id: str,
+    queries: List[str],
+    top_n_indices: torch.Tensor,
+    corpus_texts: List[str],
+    device: torch.device,
+    batch_size: int = 32,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Re-rank each query's top-n retrieved pages with a cross-encoder.
+
+    Cross-encoders score (query, page) pairs jointly through one transformer
+    forward pass — strictly more expressive than bi-encoder cosine but
+    quadratic in cost. Standard pipeline pattern: bi-encoder retrieves
+    top-100 cheaply, cross-encoder re-ranks top-100 → top-10 with the gold
+    typically rising to rank 1-3. Lifts Hit@1 / MRR substantially when the
+    bi-encoder's top-100 already contains gold.
+
+    Args:
+        model_id: HF model id (default `cross-encoder/ms-marco-MiniLM-L-12-v2`).
+        queries: list of Q query strings.
+        top_n_indices: (Q, n) int tensor of corpus indices from bi-encoder.
+        corpus_texts: list of C page texts (same order as corpus_keys).
+        device: torch device for the cross-encoder.
+        batch_size: pairs per forward (50-200 pairs/s on GPU).
+
+    Returns:
+        (reranked_indices, reranked_scores): both (Q, n), sorted descending
+        by cross-encoder score. Indices are the original corpus indices,
+        permuted into the new order.
+    """
+    from sentence_transformers import CrossEncoder
+
+    # CrossEncoder expects 'cuda' / 'cpu' string, not torch.device.
+    dev_str = device.type if hasattr(device, 'type') else str(device)
+    reranker = CrossEncoder(model_id, device=dev_str)
+
+    Q, n = top_n_indices.shape
+    reranked_idx = torch.zeros_like(top_n_indices)
+    reranked_scores = torch.zeros((Q, n), dtype=torch.float32)
+
+    for qi in range(Q):
+        idx_row = top_n_indices[qi].tolist()
+        pairs = [[queries[qi], corpus_texts[int(j)]] for j in idx_row]
+        scores = reranker.predict(pairs, batch_size=batch_size,
+                                  convert_to_numpy=True, show_progress_bar=False)
+        order = np.argsort(-scores)
+        reranked_idx[qi] = top_n_indices[qi][torch.as_tensor(order)]
+        reranked_scores[qi] = torch.as_tensor(scores[order], dtype=torch.float32)
+
+    return reranked_idx, reranked_scores
+
+
+def _aggregate_metrics(per_query: List[dict]) -> dict:
+    """Aggregate already-computed per-query metrics into mean × 100 dict.
+
+    Centralised so the original and re-ranked paths share identical formula.
+    """
+    if not per_query:
+        raise RuntimeError('No per-query metrics to aggregate.')
+    n = len(per_query)
+    return {
+        'hit@1':  sum(q['hit@1']  for q in per_query) / n * 100,
+        'hit@10': sum(q['hit@10'] for q in per_query) / n * 100,
+        'em':     sum(q['em']     for q in per_query) / n * 100,
+        'mrr':    sum(q['mrr']    for q in per_query) / n * 100,
+        'map':    sum(q['map']    for q in per_query) / n * 100,
+        'ndcg':   sum(q['ndcg']   for q in per_query) / n * 100,
+    }
+
+
+def _per_query_metrics_from_indices(
+    indices: torch.Tensor, queries: List[dict], corpus_keys: List[Tuple[str, int]],
+    top_n: int,
+) -> Tuple[List[dict], int]:
+    """Compute per-query metric dicts from (Q, n) integer index tensor.
+
+    Skips queries with empty `golden_pages` (returns skipped count alongside).
+    """
+    per_query = []
+    skipped = 0
+    for qi, record in enumerate(queries):
+        gold = golden_pages(record)
+        if not gold:
+            skipped += 1
+            continue
+        retrieved = [corpus_keys[int(idx)] for idx in indices[qi].tolist()]
+        per_query.append({
+            'qi': qi,
+            'company': record.get('other_info', {}).get('company', '?'),
+            'n_golden': len(gold),
+            'hit@1':  hit_at_k(retrieved, gold, 1),
+            'hit@10': hit_at_k(retrieved, gold, 10),
+            'em':     em_at_n(retrieved, gold, n=top_n),
+            'mrr':    mrr_for_query(retrieved, gold),
+            'map':    average_precision(retrieved, gold),
+            'ndcg':   ndcg_at_k(retrieved, gold, k=10),
+        })
+    return per_query, skipped
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #   Model loader (handles 3 checkpoint formats)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -268,8 +373,17 @@ def load_model(checkpoint_path: str | None):
 
 def run_eval(checkpoint_path: str | None, name: str, split: str,
              corpus_path: str, top_n: int, smoke: bool,
-             output_dir: str) -> dict:
-    """Run one full eval. Returns the metrics dict; also writes JSON to disk."""
+             output_dir: str,
+             rerank: bool = False,
+             rerank_model: str = 'cross-encoder/ms-marco-MiniLM-L-12-v2',
+             rerank_batch: int = 32) -> dict:
+    """Run one full eval. Returns the metrics dict; also writes JSON to disk.
+
+    When ``rerank=True``, after bi-encoder top-n retrieval the (query, page)
+    pairs are re-scored with a cross-encoder and metrics are recomputed on
+    the new order. Both pre- and post-rerank metrics are stored in the
+    output JSON under ``aggregate`` and ``aggregate_reranked``.
+    """
     from transformers import BertTokenizer
 
     print('=' * 70)
@@ -324,38 +438,13 @@ def run_eval(checkpoint_path: str | None, name: str, split: str,
     print(f'    Done in {t_retrieve:.2f}s.')
 
     # ── Compute metrics per query, then aggregate ─────────────────────────
-    per_query = []
-    skipped = 0
-    for qi, record in enumerate(queries):
-        gold = golden_pages(record)
-        if not gold:
-            skipped += 1
-            continue
-        retrieved = [corpus_keys[int(idx)] for idx in indices[qi].tolist()]
-        per_query.append({
-            'qi': qi,
-            'company': record.get('other_info', {}).get('company', '?'),
-            'n_golden': len(gold),
-            'hit@1':  hit_at_k(retrieved, gold, 1),
-            'hit@10': hit_at_k(retrieved, gold, 10),
-            'em':     em_at_n(retrieved, gold, n=top_n),
-            'mrr':    mrr_for_query(retrieved, gold),
-            'map':    average_precision(retrieved, gold),
-            'ndcg':   ndcg_at_k(retrieved, gold, k=10),
-        })
-
+    per_query, skipped = _per_query_metrics_from_indices(
+        indices, queries, corpus_keys, top_n=top_n,
+    )
     if not per_query:
         raise RuntimeError('All queries skipped — no golden evidence found.')
-
+    aggregate = _aggregate_metrics(per_query)
     n = len(per_query)
-    aggregate = {
-        'hit@1':  sum(q['hit@1'] for q in per_query) / n * 100,
-        'hit@10': sum(q['hit@10'] for q in per_query) / n * 100,
-        'em':     sum(q['em']    for q in per_query) / n * 100,
-        'mrr':    sum(q['mrr']   for q in per_query) / n * 100,
-        'map':    sum(q['map']   for q in per_query) / n * 100,
-        'ndcg':   sum(q['ndcg']  for q in per_query) / n * 100,
-    }
 
     # ── Pretty print ──────────────────────────────────────────────────────
     print()
@@ -369,14 +458,60 @@ def run_eval(checkpoint_path: str | None, name: str, split: str,
     print(f'  NDCG    = {aggregate["ndcg"]:6.2f}')
     print()
 
+    # ── Optional Phase 5: cross-encoder rerank ────────────────────────────
+    aggregate_reranked = None
+    per_query_reranked = None
+    t_rerank = 0.0
+    if rerank:
+        print(f'  Reranking top-{top_n} with cross-encoder: {rerank_model}')
+        t0 = time.time()
+        reranked_indices, _ = rerank_with_cross_encoder(
+            model_id=rerank_model,
+            queries=q_texts,
+            top_n_indices=indices,
+            corpus_texts=corpus_texts,
+            device=device,
+            batch_size=rerank_batch,
+        )
+        t_rerank = time.time() - t0
+        n_pairs = int(indices.shape[0]) * int(indices.shape[1])
+        print(f'    Done in {t_rerank:.1f}s '
+              f'({n_pairs / max(t_rerank, 1e-3):.1f} pairs/s).')
+
+        per_query_reranked, skipped_re = _per_query_metrics_from_indices(
+            reranked_indices, queries, corpus_keys, top_n=top_n,
+        )
+        aggregate_reranked = _aggregate_metrics(per_query_reranked)
+        n_re = len(per_query_reranked)
+
+        print()
+        print(f'=== Results (RERANKED): {name} (split={split}, '
+              f'n={n_re} queries, {skipped_re} skipped) ===')
+        print(f'  Hit@1   = {aggregate_reranked["hit@1"]:6.2f}   '
+              f'(Δ={aggregate_reranked["hit@1"] - aggregate["hit@1"]:+.2f})')
+        print(f'  Hit@10  = {aggregate_reranked["hit@10"]:6.2f}   '
+              f'(Δ={aggregate_reranked["hit@10"] - aggregate["hit@10"]:+.2f})')
+        print(f'  EM      = {aggregate_reranked["em"]:6.2f}   '
+              f'(Δ={aggregate_reranked["em"] - aggregate["em"]:+.2f})')
+        print(f'  MRR     = {aggregate_reranked["mrr"]:6.2f}   '
+              f'(Δ={aggregate_reranked["mrr"] - aggregate["mrr"]:+.2f})')
+        print(f'  MAP     = {aggregate_reranked["map"]:6.2f}   '
+              f'(Δ={aggregate_reranked["map"] - aggregate["map"]:+.2f})')
+        print(f'  NDCG    = {aggregate_reranked["ndcg"]:6.2f}   '
+              f'(Δ={aggregate_reranked["ndcg"] - aggregate["ndcg"]:+.2f})')
+        print()
+
     # ── Save JSON ─────────────────────────────────────────────────────────
     os.makedirs(output_dir, exist_ok=True)
+    suffix = ('_reranked' if rerank else '') + ('_smoke' if smoke else '')
     out_path = os.path.join(output_dir,
-                            f'eval_output_{name}_{split}{"_smoke" if smoke else ""}.json')
+                            f'eval_output_{name}_{split}{suffix}.json')
     out_payload = {
         'name': name,
         'split': split,
         'smoke': smoke,
+        'rerank': rerank,
+        'rerank_model': rerank_model if rerank else None,
         'checkpoint': checkpoint_path,
         'model_format': fmt,
         'top_n': top_n,
@@ -387,9 +522,12 @@ def run_eval(checkpoint_path: str | None, name: str, split: str,
             'corpus_encode': round(t_corpus, 2),
             'query_encode':  round(t_query, 2),
             'retrieve':      round(t_retrieve, 2),
+            'rerank':        round(t_rerank, 2),
         },
         'aggregate': aggregate,
         'per_query': per_query,
+        'aggregate_reranked': aggregate_reranked,
+        'per_query_reranked': per_query_reranked,
     }
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(out_payload, f, indent=2, ensure_ascii=False)
@@ -414,6 +552,14 @@ def main():
                    default=os.path.join(here, 'paper_test_data', 'eval_outputs'))
     p.add_argument('--smoke', action='store_true',
                    help='run on first 5 queries × first 200 corpus pages')
+    p.add_argument('--rerank', action='store_true',
+                   help='Phase 5: re-rank top-n via cross-encoder, emit '
+                        '`aggregate_reranked` alongside the original metrics.')
+    p.add_argument('--rerank-model',
+                   default='cross-encoder/ms-marco-MiniLM-L-12-v2',
+                   help='HF cross-encoder model id (default: ms-marco-MiniLM-L-12-v2)')
+    p.add_argument('--rerank-batch', type=int, default=32,
+                   help='cross-encoder predict batch size (default: 32)')
     args = p.parse_args()
 
     # Make `flgo.benchmark.fedrag_classification.config` importable for LoRA load
@@ -431,6 +577,9 @@ def main():
         top_n=args.top_n,
         smoke=args.smoke,
         output_dir=args.output_dir,
+        rerank=args.rerank,
+        rerank_model=args.rerank_model,
+        rerank_batch=args.rerank_batch,
     )
 
 

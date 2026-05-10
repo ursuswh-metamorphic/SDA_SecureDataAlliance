@@ -335,48 +335,70 @@ class Client(BasicClient):
                 print(f"server loss: {server_loss}")
 
     def _train_dp(self, model, local_model, optimizer):
-        """Phase-2 per-sample DP-SGD on LoRA params only.
+        """Per-sample DP-SGD on LoRA params with paper-faithful RAG-FT + KD-GLE.
 
-        Builds its own AdamW optimizer over LoRA-only params, ignoring the
-        SGD optimizer flgo created (its default). Why: with sigma=1.2940 and
-        clip_norm=0.1, the post-clipping per-coordinate update is tiny
-        (~1e-5). Plain SGD at lr=1e-5 multiplies that down further, leaving
-        lora_B (initialised to zero by PEFT) at ~1e-6 after 25 rounds — the
-        merged model is then bit-identical to base, retention 100% of
-        pretrained but no actual learning.
+        Phase 6.3 of the paper-faithful recipe: replaces the legacy
+        `loss = 1 - cos_sim(q, r)` per-sample loss (no negatives, weak
+        signal, validated only to 98.4% retention) with paper §3.2 RAG-FT
+        InfoNCE + §3.3 KD-GLE MSE — the EXACT recipe used in arXiv:
+        2504.19101 — adapted for per-sample gradient extraction.
 
-        AdamW adapts the per-parameter learning rate based on gradient
-        history, so even small gradients accumulate into meaningful updates
-        — matching main_dp_lora_eps20.py:84 which uses AdamW directly.
+        ── Strategy ────────────────────────────────────────────────────────
+        Per-sample DP needs per-sample gradient, but InfoNCE wants in-batch
+        negatives. Solution: encode the batch's references ONCE outside the
+        per-sample loop with `torch.no_grad()` (cached as a frozen tensor),
+        then for each query do a per-sample forward `q_i_emb @ ref_embs.T`
+        producing a (1, B) similarity row. Each row's gradient flows back
+        only through `q_i_emb` — i.e. only through sample i's query — so
+        the per-sample sensitivity bound is preserved.
 
         For each step:
-          1. Get a batch of size `bs`.
-          2. For each sample i in [0, bs):
-               * forward + backward on a per-sample-meaningful loss
-               * compute per-sample L2 grad norm
-               * clip: g_i ← g_i · min(1, C / ‖g_i‖)
+          1. Tokenize batch.
+          2. (no_grad) Encode `ref_embs` with local_model       → (B, D)
+          3. (no_grad) Encode teacher `tq_embs`, `tr_embs`      → (B, D)
+                       Compute `teacher_sim = tq @ tr.T / |·|`  → (B, B)
+          4. For each i in [0, B):
+               * (with grad) Encode `q_i_emb` = local_model(q_i)  → (1, D)
+               * `sim_row = normalize(q_i_emb) @ ref_embs.T`      → (1, B)
+                 (refs were already L2-normalized in step 2)
+               * loss_rag_ft = CE(sim_row / τ, label=[i])
+                 loss_kd_gle = MSE(sim_row, teacher_sim[i:i+1])
+               * loss_i = loss_rag_ft + kd_weight · loss_kd_gle
+               * loss_i.backward()
+               * clip per-sample: g_i ← g_i · min(1, C / ‖g_i‖)
                * accumulate
-          3. Add Gaussian noise N(0, σ²·C²·I), normalize by bs:
-                p.grad = (Σ_i g̃_i + ξ) / bs
-          4. Post-noise stability: clip total grad norm to 1.0
-          5. optimizer.step()
+          5. Gaussian noise N(0, σ²·C²·I); average by bs.
+          6. Post-noise stability clip (max_norm=1.0).
+          7. AdamW step.
 
-        IMPORTANT — loss choice for the per-sample inner loop:
-          The Phase-3 InfoNCE + KL loss is in-batch contrastive (relies on
-          B>=2 references to define positives/negatives). On a single sample
-          the softmax over a 1×1 logit row collapses to [1.0] and the loss
-          gradient is identically zero. With σ·C noise injected, the
-          accumulated update becomes pure noise — the model never learns,
-          retention stays at 100% of pretrained.
+        ── AdamW over flgo's default SGD ───────────────────────────────────
+        With σ≈1.29, C=0.1 the clipped+noised per-coordinate update is
+        ~1e-5. SGD at lr=1e-5 leaves PEFT's zero-initialised lora_B at
+        ~1e-6 after rounds — model is bit-identical to base. AdamW adapts
+        per-parameter LR by gradient history so small gradients accumulate
+        into meaningful updates (mirrors main_dp_lora_eps20.py:84).
 
-          So in the DP path we mirror main_dp_lora_eps20.py:111-112:
-              loss_per_sample = 1 - cos_sim(q_emb, r_emb)
-          which gives a non-degenerate gradient for any bs >= 1. This
-          matches the validated 98.4 %-retention recipe at ε=20.
+        ── Why this matches paper §3 ───────────────────────────────────────
+        - Each sample's loss = InfoNCE over (q_i vs all B refs) + MSE-to-
+          teacher on the same row. Identical formula to non-DP recipe in
+          core.compute_client_loss (Phase 2 revert), just emitted per-row
+          with a frozen ref pool to keep per-sample DP semantics clean.
+        - tau, kd_weight read from option (override via env or main_lora).
 
-          The Phase-3 InfoNCE+KL loss is still used by the non-DP path
-          (`_train_plain`) where bs > 1 makes the contrastive meaningful.
+        ── DP guarantee ────────────────────────────────────────────────────
+        Sensitivity bound preserved: `q_i_emb` is the ONLY term with
+        gradient flow per inner iter; refs/teacher are detached. Removing
+        sample i changes only its own contribution to the accumulator
+        before noise. σ calibration unchanged.
+
+        ── Edge cases ──────────────────────────────────────────────────────
+        - bs=1: sim_row is (1,1), CE on diag of 1×1 → 0; KD-MSE term still
+          drives. Loss is non-degenerate (vs Phase-3 KL+InfoNCE which gave
+          identical-zero gradient at bs=1).
+        - bs=0: skip step (matches old behavior).
         """
+        from flgo.benchmark.fedrag_classification.core import cos_sim  # noqa: F401
+
         params = [p for p in local_model.parameters() if p.requires_grad]
         if not params:
             raise RuntimeError(
@@ -392,13 +414,20 @@ class Client(BasicClient):
                 'check option[\'dp_enabled\'] and target_epsilon.'
             )
 
-        # Override flgo's default SGD with AdamW to match the standalone
-        # main_dp_lora_eps20.py recipe — see method docstring for rationale.
+        # Loss hyperparameters — read from option; fall back to the
+        # calculator's instance values (set by core.DEFAULT_TEMPERATURE /
+        # DEFAULT_KD_WEIGHT at construction time). Per-sample loop must use
+        # the SAME tau / kd_weight as compute_client_loss for paper fidelity.
+        tau = float(self.option.get('temperature',
+                                    getattr(self.calculator, 'temperature', 0.05)))
+        kd_weight = float(self.option.get('kd_weight',
+                                          getattr(self.calculator, 'kd_weight', 1.0)))
+
+        # Override flgo's default SGD with AdamW (see docstring rationale).
         optimizer = torch.optim.AdamW(
             params, lr=self.learning_rate, weight_decay=0.01,
         )
 
-        # Tokenizer is on the calculator (set up in TaskCalculator.__init__).
         tokenizer = self.calculator.tokenizer
         max_length = tokenizer.model_max_length
 
@@ -410,47 +439,83 @@ class Client(BasicClient):
             if bs == 0:
                 continue
 
-            # batch_data is a tuple (questions, answers, references) per
-            # FEDRAG.__getitem__. Pull the lists out once per batch.
+            # batch_data = (questions, answers, references) per FEDRAG.__getitem__.
             questions = list(batch_data[0])
             references = list(batch_data[2])
+
+            # ── Cache reference and teacher embeddings (no_grad) ──────────
+            # These are computed ONCE per batch and shared across the inner
+            # per-sample loop. They must NOT track gradient — the per-sample
+            # gradient must depend only on q_i_emb, not on other samples'
+            # encodings.
+            with torch.no_grad():
+                ref_inp = tokenizer(
+                    references, return_tensors='pt', padding=True,
+                    truncation=True, max_length=max_length,
+                ).to(self.device)
+                ref_out = local_model(**ref_inp).last_hidden_state.mean(dim=1)
+                ref_embs = torch.nn.functional.normalize(ref_out, dim=-1, p=2)
+                ref_embs = ref_embs.detach()                              # (B, D)
+
+                # Teacher: same model after Server.aggregate; KD-GLE target.
+                tq_inp = tokenizer(
+                    questions, return_tensors='pt', padding=True,
+                    truncation=True, max_length=max_length,
+                ).to(self.device)
+                tq_out = model(**tq_inp).last_hidden_state.mean(dim=1)
+                tq_n = torch.nn.functional.normalize(tq_out, dim=-1, p=2)
+
+                tr_out = model(**ref_inp).last_hidden_state.mean(dim=1)
+                tr_n = torch.nn.functional.normalize(tr_out, dim=-1, p=2)
+
+                teacher_sim = (tq_n @ tr_n.t()).detach()                  # (B, B)
+
+            # Sanity (cheap, only first step) — guard against gradient leak.
+            if step == 0:
+                assert not ref_embs.requires_grad, \
+                    'ref_embs must be detached for per-sample DP'
+                assert not teacher_sim.requires_grad, \
+                    'teacher_sim must be detached'
 
             accumulated = [torch.zeros_like(p.data) for p in params]
 
             for i in range(bs):
                 local_model.zero_grad()
 
-                # Per-sample loss: 1 - cos(q_emb, r_emb). Non-degenerate at bs=1.
+                # ── Per-sample query forward (with grad) ──────────────────
                 q_inp = tokenizer(
                     [questions[i]], return_tensors='pt', padding=True,
                     truncation=True, max_length=max_length,
                 ).to(self.device)
-                q_emb = local_model(**q_inp).last_hidden_state.mean(dim=1)
+                q_out = local_model(**q_inp).last_hidden_state.mean(dim=1)
+                q_n = torch.nn.functional.normalize(q_out, dim=-1, p=2)   # (1, D)
 
-                r_inp = tokenizer(
-                    [references[i]], return_tensors='pt', padding=True,
-                    truncation=True, max_length=max_length,
-                ).to(self.device)
-                r_emb = local_model(**r_inp).last_hidden_state.mean(dim=1)
+                # (1, B) row: this sample's similarity to all B refs.
+                sim_row = q_n @ ref_embs.t()
+                label_i = torch.tensor([i], device=self.device)
 
-                sim = torch.nn.functional.cosine_similarity(q_emb, r_emb)
-                loss = 1.0 - sim.mean()
-                loss.backward()
+                # Paper §3.2 RAG-FT (InfoNCE) + §3.3 KD-GLE (MSE).
+                loss_rag_ft = torch.nn.functional.cross_entropy(
+                    sim_row / tau, label_i,
+                )
+                loss_kd_gle = torch.nn.functional.mse_loss(
+                    sim_row, teacher_sim[i:i+1],
+                )
+                loss_i = loss_rag_ft + kd_weight * loss_kd_gle
+                loss_i.backward()
 
-                # Per-sample L2 norm across all LoRA gradients.
+                # Per-sample L2 norm + clip.
                 per_sample_norm = _compute_grad_norm(params)
                 clip_coef = min(1.0, clip_norm / (per_sample_norm + 1e-8))
-
                 for j, p in enumerate(params):
                     if p.grad is not None:
                         accumulated[j] += p.grad.detach() * clip_coef
 
-            # Gaussian noise on accumulated; divide by bs to recover average.
+            # ── Noise + average + step ────────────────────────────────────
             for j, p in enumerate(params):
                 noise = torch.randn_like(accumulated[j]) * (sigma * clip_norm)
                 p.grad = (accumulated[j] + noise) / float(bs)
 
-            # Post-noise stability clip (mirror main_dp_lora_eps20.py:130).
             torch.nn.utils.clip_grad_norm_(params, max_norm=1.0)
             optimizer.step()
 
@@ -458,7 +523,8 @@ class Client(BasicClient):
                 total_norm = _compute_grad_norm(params)
                 print(
                     f'[DP-Client {self.id}] step {step}/{self.num_steps}, '
-                    f'σ={sigma:.4f}, C={clip_norm}, ‖∇‖={total_norm:.4f}'
+                    f'σ={sigma:.4f}, C={clip_norm}, τ={tau}, kw={kd_weight}, '
+                    f'last_loss={loss_i.item():.4f}, ‖∇‖={total_norm:.4f}'
                 )
 
     def reply(self, svr_pkg):

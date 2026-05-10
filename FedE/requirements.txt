@@ -41,3 +41,8 @@ bitsandbytes>=0.43; sys_platform == "linux"
 # deepeval>=0.20.0                 # LLM-as-judge metrics (faithfulness, relevancy)
 # rouge-score>=0.1.2               # ROUGE-L for text similarity
 
+# ── Phase 5 (paper-faithful eval): cross-encoder re-rank (optional) ───────────
+# Used by `python eval_paper_faithful.py --rerank`. Linux/CUDA recommended;
+# CPU works but slower. Default model is `cross-encoder/ms-marco-MiniLM-L-12-v2`.
+sentence-transformers>=2.6.0; sys_platform == "linux"
+

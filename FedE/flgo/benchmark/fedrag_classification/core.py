@@ -156,22 +156,32 @@ class TaskCalculator(GeneralCalculator):
 
     def compute_client_loss(self, server_logits, model, batch_data):
         """
-        Phase 3 — formal loss decomposition:
-          * loss_1 = InfoNCE: temperature-scaled CE over in-batch cosine logits
-                     with diagonal labels (Q_i must match R_i).
-          * loss_2 = KD-GLE: KL divergence between student and teacher
-                     softmax distributions (server provides teacher logits).
-                     Multiplied by τ² following Hinton et al. (2015) so the
-                     gradient magnitude is preserved relative to the InfoNCE term.
+        Paper-faithful (FedE4RAG arXiv:2504.19101 §3.2 RAG-FT + §3.3 KD-GLE):
 
-        Total: loss_1 + kd_weight * loss_2.
+          * loss_1 = RAG-FT (InfoNCE): temperature-scaled CE over in-batch
+                     cosine logits with diagonal labels (Q_i must match R_i).
+                     Paper formula: −1/N · Σ log(exp(sim(h_i^q, h_i^c)/τ) /
+                                                  Σ_j exp(sim(h_i^q, h_j^c)/τ))
+
+          * loss_2 = KD-GLE (MSE on similarity matrices): paper §3.3 uses
+                     `1/N · Σ ‖z_l − z_g‖²` — MSE between local model's
+                     similarity scores `z_l = logits` and the global model's
+                     `z_g = server_logits`, NOT KL divergence on softmaxed
+                     probabilities. Phase 3 of our pipeline deviated to KL;
+                     this revert restores paper fidelity.
+
+        Total: loss_1 + kd_weight × loss_2.
 
         Notes:
-          * On a 1×1 batch (per-sample DP path), softmax([x])=[1.0] so both
-            terms degenerate to 0. This is acceptable for DP-SGD which only
-            requires per-sample sensitivity bounds.
-          * Legacy 100×MSE was an artefact of MSE's small magnitude; KL has
-            comparable scale to InfoNCE so kd_weight=1.0 is the right default.
+          * Default kd_weight = 1.0. Paper doesn't state weight; original
+            repo code had hard-coded 100×. Magnitudes between InfoNCE
+            (∼log(N)) and MSE on raw cosine sim (∼0.0001 if both models
+            agree) differ by ~3-4 orders. If MSE term too small in practice,
+            bump kd_weight via `option['kd_weight']` plumbing.
+          * On a 1×1 batch (per-sample DP path), this loss degenerates:
+            CE on diag of 1×1 → 0, MSE on 1×1 vs 1×1 → tiny. The DP path
+            in fedrag_lora._train_dp uses its own per-sample contrastive
+            with cached batch refs (paper recipe still applies).
         """
         questions = batch_data[0]
         answers = batch_data[1]
@@ -197,18 +207,14 @@ class TaskCalculator(GeneralCalculator):
         tau = self.temperature
         label = torch.arange(len(logits)).to(self.device)
 
-        # ── Loss 1: InfoNCE (temperature-scaled in-batch contrastive) ────
+        # ── Loss 1: RAG-FT (InfoNCE, paper §3.2) ─────────────────────────
         loss_1 = F.cross_entropy(logits / tau, label)
 
-        # ── Loss 2: KD-GLE (KL divergence student || teacher, both softened) ─
-        # Move server_logits to the same device as logits to handle the
-        # case where server compute_server_loss ran on a different GPU/CPU.
+        # ── Loss 2: KD-GLE (MSE on similarity matrices, paper §3.3) ──────
+        # Move server_logits to the same device to handle cross-device
+        # case where compute_server_loss ran on a different GPU.
         teacher_logits = server_logits.to(self.device)
-        loss_2 = F.kl_div(
-            F.log_softmax(logits / tau, dim=-1),
-            F.softmax(teacher_logits / tau, dim=-1),
-            reduction='batchmean',
-        ) * (tau ** 2)
+        loss_2 = F.mse_loss(logits, teacher_logits)
 
         total = loss_1 + self.kd_weight * loss_2
         return total, loss_1, loss_2
