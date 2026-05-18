@@ -948,6 +948,57 @@ Contributions:
 
 → **5/5 met**. Phase 6.5D delivers definitive triple-confirmation of AdamW invariance + complete eval matrix.
 
+### 14.6.5 GIẢI THÍCH SÂU — Vì sao Hit@1 = 0% ban đầu?
+
+Đây là **crux** của entire project — câu hỏi phổ biến leader/team sẽ hỏi.
+
+**Hai protocols, hai bài toán khác nhau**:
+
+| Protocol | Bài toán | BGE-base pretrained | Best fine-tune |
+|---|---|---|---|
+| **Standard IR** (mình ban đầu) | "Tìm gold page trong 30,829 raw 10-K pages" | 0% | 0% |
+| **Paper protocol** (paper's actual eval) | "Match Q với gold ref text đã APPEND vào corpus" | 56% | 62% |
+
+**Ví dụ concrete** — query "What is Pepsi's restructuring costs in FY2022?":
+
+Standard IR:
+- Corpus: 30,829 raw pages (gold ở PEPSICO_2022 page 77 — KHÔNG marked)
+- Encode Q → cosine vs 30K embeddings → top-1: (3M_2018, p23) ❌
+- Gold = (PEPSICO_2022, 77) → NO MATCH → Hit@1 = 0
+
+Paper protocol:
+- Corpus: 6,066 pages + APPEND 50 gold refs (each with unique chunk_id)
+- Reference text của query này được append với ID=4321
+- Encode Q → cosine vs 16,769 chunks → top-10 IDs: [4321, 8273, ...]
+- Gold ID = 4321 (from key_content.reference_idx) → MATCH → Hit@1 = 1 ✓
+
+**Tại sao paper protocol "dễ"**:
+1. Gold reference TEXT đã được paper add vào corpus
+2. Question generated FROM gold ref → high semantic similarity
+3. BGE-base zero-shot match được mà không cần train
+4. Đây không phải retrieval task — đây là **"find indexed gold in corpus"**
+
+**Confirm bằng ablation**:
+- Paper protocol + WITH append-refs + pretrained = **56%**
+- Paper protocol + NO append-refs + pretrained = **0%**
+→ 100% of pretrained's 56% đến từ append-refs trick.
+
+**Vì sao mình ban đầu chọn Standard IR**:
+- Field `evidence.evidence_page_num=77` → natural reading: "gold = page identifier"
+- BEIR/MS-MARCO benchmark practice: match by (doc, page)
+- Đây là **honest retrieval evaluation**: model phải tự discover gold từ corpus thô
+
+**Sai sót**: Không đọc field `key_content.reference_idx` (chunk ID paper dùng), không clone paper repo sớm để audit eval code.
+
+**Khám phá**: Phase 6.5B audit `DocAILab/FedE4RAG/RAGTest/data/loader.py:25-32` → phát hiện trick → implement `eval_paper_protocol.py` → đo lại Hit@1 = 56-62%.
+
+**Hai numbers đều honest**:
+- Standard IR 0% = real measurement of BGE-base on hard retrieval task
+- Paper protocol 56% = paper's chosen protocol, anyone reproducible
+- **Không mâu thuẫn — đo 2 thứ khác nhau**
+
+→ Mình measure DP cost trên CẢ 2 protocols. Standard IR undefined (0/0), paper protocol **90%+ retention** với ε=20 — đó là publishable number.
+
 ### 14.7 Project at this milestone
 
 **3 publishable findings** ready:
