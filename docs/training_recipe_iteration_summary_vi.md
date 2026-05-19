@@ -999,6 +999,89 @@ Paper protocol:
 
 → Mình measure DP cost trên CẢ 2 protocols. Standard IR undefined (0/0), paper protocol **90%+ retention** với ε=20 — đó là publishable number.
 
+### 14.6.6 PHASE 7A — LlamaIndex chunking + Query Expansion + SEC-BERT (2026-05-18 PM)
+
+> **Server**: RTX 4090 Iceland ($0.354/h × ~30 min = ~$0.18)
+> **Code**: `eval_paper_protocol.py` với `--use-llama-index`, `--query-expansion N`, `--base-model` flags (commit 2512c65)
+
+#### Setup
+
+3 experiments sequential trên paper protocol:
+- Step 1: `--base-model nlpaueb/sec-bert-base` (SEC 10-K domain-pretrained)
+- Step 2: `--use-llama-index` (paper-faithful chunking via SentenceSplitter chunk_size=2048 tokens)
+- Step 3: `--use-llama-index --query-expansion 3` (Qwen2.5-1.5B paraphrase 3×, mean embedding)
+
+#### Results — Cumulative Phase 7A
+
+| Setup | Val Hit@1 | Val Hit@10 | Val MRR | Test Hit@1 | Test Hit@10 | Test MRR |
+|---|---:|---:|---:|---:|---:|---:|
+| BGE pretrained char-chunking (Phase 6.5C baseline) | 56 | 60 | 41.60 | 49 | 56 | 37.13 |
+| **Step 1: SEC-BERT pretrained** | **8** ❌ | 8 | 2.25 | 5 | 5 | 3.28 |
+| **Step 2: BGE + LlamaIndex tokenized chunking** | **62** | 68 | 48.47 | **62** | 71 | 46.80 |
+| **Step 3: BGE + LlamaIndex + QE×3** | **74** ⭐ | **76** | **55.79** ⭐ | 61 | 68 | 46.23 |
+| Paper claim | 87 | 89 | 71 | 73 | 79 | — |
+
+#### 3 findings từ Phase 7A
+
+**Finding 7A.1 — SEC-BERT pretrained KHÔNG work cho retrieval (-86% Hit@1)**
+
+SEC-BERT `nlpaueb/sec-bert-base` pre-trained trên 1.26M SEC 10-K filings — perfect domain match. Nhưng:
+- MLM pre-training KHÔNG fine-tune cho retrieval task
+- Output mean-pooled embedding không separable trên semantic similarity space
+- Hit@1 val DROP từ 56% (BGE) → 8% (SEC-BERT) → **dramatic regression**
+
+→ **Task match (contrastive retrieval) > Domain match (financial)** trong setting này. Cần fine-tune SEC-BERT contrastive trên Q-A pairs trước nếu muốn dùng — chưa test.
+
+**Finding 7A.2 — LlamaIndex token-based chunking ĐÁNG GIÁ (+13% test Hit@1)**
+
+Replace char-based chunking (`chunk_size=2048 chars`) với LlamaIndex `SentenceSplitter(chunk_size=2048 tokens)`:
+- Val Hit@1: 56 → 62 (+6)
+- **Test Hit@1: 49 → 62 (+13)** ⭐
+- Test MRR: 37.13 → 46.80 (+26%)
+- Token boundary respects sentence semantics better → cleaner embeddings
+
+→ **Đáng add vào pipeline production**. Tiny code change, big lift.
+
+**Finding 7A.3 — Query expansion via LLM paraphrase asymmetric — +18% val, ±0% test**
+
+Qwen2.5-1.5B-Instruct paraphrase query 3×, mean embedding các paraphrases:
+- Val Hit@1: 62 → 74 (+12) — HUGE lift
+- Test Hit@1: 62 → 61 (-1) — plateau
+- Val MRR: 48.47 → 55.79 (+15%)
+- Test MRR: 46.80 → 46.23 (-1.2%)
+
+→ **QE help val drastically nhưng plateau trên test**. Đoán: Qwen2.5 paraphrase quality varies, lucky match trên val (50 queries) nhưng test (100 queries) noise-out. Cần thử bigger LLM (Qwen2.5-7B / Llama-3.1-8B) hoặc more deterministic prompt.
+
+#### Updated ranking — best setup so far
+
+| Hạng | Setup | Val Hit@1 | Test Hit@1 | Gap to paper (87/73) |
+|---|---|---:|---:|---|
+| 🥇 | BGE + LlamaIndex chunk + QE3 (val best) | **74** | 61 | -13/-12 |
+| 🥈 | BGE + LlamaIndex chunk (balanced) | 62 | **62** | -25/-11 |
+| 🥉 | BGE base (Phase 6.5C) | 56 | 49 | -31/-24 |
+| 4 | Paper claim (with their query_expansion + chunking) | 87 | 73 | — |
+
+→ **Hai best setups khác nhau cho val và test**. Production deploy: dùng Step 2 (LlamaIndex chunk only) — balanced + no LLM dependency.
+
+#### Cost summary Phase 7A
+
+| Component | Wall time | Cost |
+|---|---|---|
+| Setup (clone + venv + deps) | 5 min | $0.03 |
+| Step 1 SEC-BERT (val + test) | ~3 min | $0.02 |
+| Step 2 BGE LlamaIndex (val + test) | ~2 min | $0.01 |
+| Step 3 BGE QE3 (val + test) | ~6 min | $0.04 |
+| Phi-3 → Qwen2.5 switch + retry | ~5 min | $0.03 |
+| **Total Phase 7A** | **~25 min** | **$0.13** ⭐ |
+
+#### Predicted với fine-tune trên top of Phase 7A
+
+If fine-tune BGE + LlamaIndex + QE → expected:
+- Val Hit@1: 74 → ~80-85% (close gap với paper 87%)
+- Test Hit@1: 62 → ~65-70%
+
+Cost: +$1.20 GPU (1 LoRA train + 1 eval).
+
 ### 14.7 Project at this milestone
 
 **3 publishable findings** ready:
