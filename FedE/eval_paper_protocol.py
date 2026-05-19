@@ -203,6 +203,112 @@ def build_paper_corpus(test_corpus_path: str, qa_path: str,
 #   Embedding helpers
 # ══════════════════════════════════════════════════════════════════════════════
 
+def build_paper_corpus_llama_index(test_corpus_path: str, qa_path: str,
+                                     corpus_cap: int = 6066,
+                                     append_refs: bool = True,
+                                     chunk_size: int = 2048,
+                                     chunk_overlap: int = 20) -> List[Tuple[int, str, str]]:
+    """Same as build_paper_corpus but use LlamaIndex SentenceSplitter (token-based).
+
+    More faithful to paper's index.py:15: SentenceSplitter(chunk_size=2048, chunk_overlap=20).
+    Token-based chunking truncates differently from char-based — typically yields more chunks.
+    """
+    from llama_index.core import Document
+    from llama_index.core.node_parser import SentenceSplitter
+
+    print(f'[build_corpus_li] Load {test_corpus_path}')
+    with open(test_corpus_path, encoding='utf-8') as f:
+        corpus = json.load(f)
+
+    documents = []
+    n_pages = 0
+    for doc_name, pages in corpus.items():
+        for page_num, page_data in pages.items():
+            if not isinstance(page_data, dict):
+                continue
+            text = page_data.get('page_content', '')
+            chunk_id = page_data.get('index')
+            if chunk_id is None or not text or not text.strip():
+                continue
+            documents.append(Document(
+                text=text,
+                metadata={'id': chunk_id, 'source': f'{doc_name}#p{page_num}'},
+                doc_id=str(chunk_id),
+            ))
+            n_pages += 1
+            if n_pages == corpus_cap:
+                break
+        if n_pages == corpus_cap:
+            break
+    print(f'[build_corpus_li] {n_pages} corpus pages')
+
+    if append_refs:
+        print(f'[build_corpus_li] Append refs from {qa_path}')
+        with open(qa_path, encoding='utf-8') as f:
+            qa = json.load(f)
+        n_refs = 0
+        for entry in qa:
+            kc = entry.get('key_content', {})
+            refs = kc.get('reference', [])
+            ref_ids = kc.get('reference_idx', [])
+            for ref_text, ref_id in zip(refs, ref_ids):
+                if not ref_text or not ref_text.strip():
+                    continue
+                documents.append(Document(
+                    text=ref_text,
+                    metadata={'id': ref_id,
+                              'source': f'{entry.get("other_info", {}).get("doc_name", "?")}#ref'},
+                    doc_id=str(ref_id),
+                ))
+                n_refs += 1
+        print(f'[build_corpus_li] +{n_refs} appended refs')
+
+    print(f'[build_corpus_li] Chunking via LlamaIndex SentenceSplitter '
+          f'(chunk_size={chunk_size} tokens, overlap={chunk_overlap})')
+    splitter = SentenceSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    nodes = splitter.get_nodes_from_documents(documents, show_progress=False)
+
+    chunks = []
+    for node in nodes:
+        chunk_id = node.metadata.get('id')
+        source = node.metadata.get('source', '?')
+        text = node.get_content()
+        if text and text.strip():
+            chunks.append((chunk_id, text, source))
+    print(f'[build_corpus_li] Total chunks: {len(chunks)}')
+    return chunks
+
+
+def expand_query_with_llm(query: str, n_paraphrases: int,
+                          llm_pipeline) -> List[str]:
+    """Generate N paraphrases of query using local LLM, return [query] + paraphrases.
+
+    Mimics paper's query_expansion approach (4 paraphrases by default).
+    Falls back to [query] only if LLM fails.
+    """
+    if n_paraphrases <= 0 or llm_pipeline is None:
+        return [query]
+
+    prompt = (
+        f"Generate {n_paraphrases} different ways to ask the following financial "
+        f"question, keeping the same meaning. Return only the questions, one per "
+        f"line, no numbering, no extra text.\n\n"
+        f"Question: {query}\n\n"
+        f"Paraphrases:"
+    )
+    try:
+        out = llm_pipeline(prompt, max_new_tokens=200, do_sample=True,
+                          temperature=0.7, return_full_text=False)
+        text = out[0]['generated_text'] if isinstance(out, list) else str(out)
+        lines = [ln.strip().lstrip('-*0123456789.) ') for ln in text.split('\n')
+                 if ln.strip() and len(ln.strip()) > 10]
+        paraphrases = lines[:n_paraphrases]
+        return [query] + paraphrases
+    except Exception as e:
+        print(f'  [expand_query] LLM fail: {e}')
+        return [query]
+
+
 def encode_texts(model, tokenizer, texts: List[str], device,
                  batch_size: int = 32, max_length: int = 512) -> torch.Tensor:
     """Mean-pool encode + L2 normalize."""
@@ -221,14 +327,22 @@ def encode_texts(model, tokenizer, texts: List[str], device,
     return F.normalize(e, dim=-1, p=2)
 
 
-def load_model(checkpoint_path: str | None):
-    """Load BGE-base, apply LoRA checkpoint if given."""
+def load_model(checkpoint_path: str | None, base_model: str = 'BAAI/bge-base-en'):
+    """Load base encoder, apply LoRA checkpoint if given.
+
+    base_model options (verified compatible với BertModel architecture, 109M params):
+      - 'BAAI/bge-base-en'         (default, general retrieval)
+      - 'nlpaueb/sec-bert-base'    (SEC 10-K pre-trained, domain match for financial)
+      - 'ProsusAI/finbert'          (financial news, sentiment-oriented)
+      - 'yiyanghkust/finbert-tone' (financial sentiment)
+    """
     from transformers import BertModel
-    base = BertModel.from_pretrained('BAAI/bge-base-en')
+    print(f'  [load_model] base_model={base_model}')
+    base = BertModel.from_pretrained(base_model)
     if not checkpoint_path or not os.path.exists(checkpoint_path):
         if checkpoint_path:
             print(f'  [load_model] checkpoint not found: {checkpoint_path}')
-        return base, 'pretrained'
+        return base, f'pretrained_{base_model.replace("/", "_")}'
 
     print(f'  [load_model] Loading {checkpoint_path}')
     state = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
@@ -247,7 +361,7 @@ def load_model(checkpoint_path: str | None):
         miss, unexp = wrapped.load_state_dict(state, strict=False)
         print(f'    LoRA-only ({len(state)} tensors); missing={len(miss)}, unexp={len(unexp)}')
         merged = wrapped.merge_and_unload()
-        return merged, 'lora_merged'
+        return merged, f'lora_merged_on_{base_model.replace("/", "_")}'
 
     # Full state dict
     clean = {}
@@ -255,7 +369,7 @@ def load_model(checkpoint_path: str | None):
         nk = k.replace('module.', '').replace('model.', '', 1) if 'model.' in k else k
         clean[nk] = v
     base.load_state_dict(clean, strict=False)
-    return base, 'full_base'
+    return base, f'full_base_{base_model.replace("/", "_")}'
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -267,28 +381,47 @@ def run_paper_eval(checkpoint_path: str | None, name: str, split: str,
                    top_k: int = 10, corpus_cap: int = 6066,
                    append_refs: bool = True,
                    batch_size: int = 32,
-                   output_dir: str | None = None) -> dict:
-    """Run paper-protocol eval. Returns metrics dict + saves JSON."""
-    from transformers import BertTokenizer
+                   output_dir: str | None = None,
+                   base_model: str = 'BAAI/bge-base-en',
+                   use_llama_index: bool = False,
+                   query_expansion_n: int = 0) -> dict:
+    """Run paper-protocol eval. Returns metrics dict + saves JSON.
+
+    Args:
+        base_model: HF model id (BAAI/bge-base-en default, nlpaueb/sec-bert-base for SEC domain)
+        use_llama_index: use LlamaIndex SentenceSplitter (token-based) instead of char-based
+        query_expansion_n: if > 0, paraphrase query N times via local Phi-3 and merge top-K
+                          retrieval results (paper's query_expansion approach).
+    """
+    from transformers import BertTokenizer, AutoTokenizer
 
     print('=' * 70)
     print(f'  Paper-protocol eval: {name} (split={split}, top_k={top_k},')
-    print(f'  corpus_cap={corpus_cap}, append_refs={append_refs})')
+    print(f'  corpus_cap={corpus_cap}, append_refs={append_refs},')
+    print(f'  base_model={base_model}, llama_index={use_llama_index}, qe={query_expansion_n})')
     print('=' * 70)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'  Device: {device}')
 
     # ── Build corpus per paper protocol ───────────────────────────────────
-    chunks = build_paper_corpus(corpus_path, qa_path, corpus_cap=corpus_cap,
-                                 append_refs=append_refs)
+    if use_llama_index:
+        chunks = build_paper_corpus_llama_index(corpus_path, qa_path,
+                                                  corpus_cap=corpus_cap,
+                                                  append_refs=append_refs)
+    else:
+        chunks = build_paper_corpus(corpus_path, qa_path, corpus_cap=corpus_cap,
+                                     append_refs=append_refs)
     chunk_ids = [c[0] for c in chunks]
     chunk_texts = [c[1] for c in chunks]
 
     # ── Load model + tokenizer ────────────────────────────────────────────
-    model, fmt = load_model(checkpoint_path)
+    model, fmt = load_model(checkpoint_path, base_model=base_model)
     print(f'  Model format: {fmt}')
-    tokenizer = BertTokenizer.from_pretrained('BAAI/bge-base-en')
+    try:
+        tokenizer = BertTokenizer.from_pretrained(base_model)
+    except Exception:
+        tokenizer = AutoTokenizer.from_pretrained(base_model)
     model.eval().to(device)
 
     # ── Load queries ──────────────────────────────────────────────────────
@@ -304,11 +437,50 @@ def run_paper_eval(checkpoint_path: str | None, name: str, split: str,
     t_corpus = time.time() - t0
     print(f'    Done in {t_corpus:.1f}s ({len(chunks) / max(t_corpus, 1e-3):.1f} chunks/s)')
 
-    # ── Encode queries ────────────────────────────────────────────────────
+    # ── Setup query expansion LLM (optional) ──────────────────────────────
+    llm_pipeline = None
+    if query_expansion_n > 0:
+        print(f'  Setting up query expansion LLM (n={query_expansion_n})...')
+        try:
+            from transformers import pipeline
+            llm_pipeline = pipeline(
+                'text-generation',
+                model='microsoft/Phi-3-mini-128k-instruct',
+                torch_dtype=torch.bfloat16,
+                device_map='cuda',
+                trust_remote_code=True,
+            )
+            print(f'    Phi-3-mini loaded')
+        except Exception as e:
+            print(f'    [WARN] Phi-3 fail: {e}; falling back to no expansion')
+            llm_pipeline = None
+
+    # ── Encode queries (with optional expansion) ──────────────────────────
     print(f'  Encoding {len(queries)} queries...')
     t0 = time.time()
     q_texts = [q['key_content']['question'] for q in queries]
-    q_embs = encode_texts(model, tokenizer, q_texts, device, batch_size)
+
+    if query_expansion_n > 0 and llm_pipeline is not None:
+        # Each query → [orig + paraphrases]
+        expanded_per_query = []
+        for q_text in q_texts:
+            expanded = expand_query_with_llm(q_text, query_expansion_n, llm_pipeline)
+            expanded_per_query.append(expanded)
+        # Encode all variations flat
+        all_q_texts = [v for variations in expanded_per_query for v in variations]
+        all_q_embs = encode_texts(model, tokenizer, all_q_texts, device, batch_size)
+        # Re-aggregate per query: take mean embedding of variations
+        q_embs = []
+        offset = 0
+        for variations in expanded_per_query:
+            n_var = len(variations)
+            mean_emb = all_q_embs[offset:offset + n_var].mean(dim=0)
+            mean_emb = F.normalize(mean_emb.unsqueeze(0), dim=-1, p=2).squeeze(0)
+            q_embs.append(mean_emb)
+            offset += n_var
+        q_embs = torch.stack(q_embs)
+    else:
+        q_embs = encode_texts(model, tokenizer, q_texts, device, batch_size)
     t_q = time.time() - t0
     print(f'    Done in {t_q:.1f}s')
 
@@ -358,11 +530,14 @@ def run_paper_eval(checkpoint_path: str | None, name: str, split: str,
         'split': split,
         'checkpoint': checkpoint_path,
         'model_format': fmt,
+        'base_model': base_model,
         'corpus_path': corpus_path,
         'qa_path': qa_path,
         'top_k': top_k,
         'corpus_cap': corpus_cap,
         'append_refs': append_refs,
+        'use_llama_index': use_llama_index,
+        'query_expansion_n': query_expansion_n,
         'n_chunks_indexed': len(chunks),
         'n_queries': n,
         'protocol': 'paper-faithful (loader.py append refs + Hit definition)',
@@ -406,6 +581,17 @@ def main():
     p.add_argument('--batch-size', type=int, default=32)
     p.add_argument('--output-dir',
                    default=os.path.join(here, 'paper_test_data', 'eval_outputs'))
+    # ── Phase 7A flags ───────────────────────────────────────────────────
+    p.add_argument('--base-model', default='BAAI/bge-base-en',
+                   help='HF model id for base encoder. Options: '
+                        'BAAI/bge-base-en (default), nlpaueb/sec-bert-base (SEC 10-K), '
+                        'ProsusAI/finbert, yiyanghkust/finbert-tone')
+    p.add_argument('--use-llama-index', action='store_true',
+                   help='Use LlamaIndex SentenceSplitter (token-based, paper-faithful) '
+                        'instead of char-based chunking')
+    p.add_argument('--query-expansion', type=int, default=0, metavar='N',
+                   help='Paraphrase each query N times via Phi-3-mini and use mean '
+                        'embedding (paper uses N=3 with query_expansion). Default 0 = off.')
     args = p.parse_args()
 
     name = args.name or (
@@ -424,6 +610,9 @@ def main():
         append_refs=not args.no_append_refs,
         batch_size=args.batch_size,
         output_dir=args.output_dir,
+        base_model=args.base_model,
+        use_llama_index=args.use_llama_index,
+        query_expansion_n=args.query_expansion,
     )
 
 
