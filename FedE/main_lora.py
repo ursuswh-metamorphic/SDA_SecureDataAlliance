@@ -65,6 +65,12 @@ if not os.path.exists(task):
 
 # ── Toggle DP via env var DP_ENABLED=1 (or edit dp_enabled below) ────────────
 DP_ENABLED = os.environ.get('DP_ENABLED', '0') == '1'
+# Override target epsilon via env var (Phase 7C — privacy-utility tradeoff curve)
+# Common values: 0.1 (very strong), 1 (strong/deployment), 5 (moderate-strong),
+#                10 (moderate), 20 (default, Phase 6/6.5 baseline), 50, 100 (weak)
+TARGET_EPS = float(os.environ.get('TARGET_EPS', '20.0'))
+if TARGET_EPS != 20.0:
+    print(f'[main_lora] ⚠ TARGET_EPS overridden to {TARGET_EPS} (default 20.0)')
 
 option = {
     # FL hyperparameters — paper §4.1 defaults
@@ -79,7 +85,7 @@ option = {
 
     # ── Phase 2 DP knobs (mirror main_dp_lora_eps20.py:29-38) ─────────────
     'dp_enabled': DP_ENABLED,
-    'target_epsilon': 20.0,
+    'target_epsilon': TARGET_EPS,
     'target_delta': 1e-5,
     'dp_clip_norm': 0.1,
     'dp_clients_per_round': 5,   # all 5 clients per round → q=1.0 (no amplification)
