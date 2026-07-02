@@ -196,3 +196,19 @@ RAGTest/data/.ipynb_checkpoints/documents-checkpoint.json
 finsaferag/finsaferag/config.toml
 finsaferag/finsaferag/config.local.toml
 .claude/settings.local.json
+
+# ── SDA: paper literature, large data & heavy artifacts ──────────────────
+# Literature PDFs (research reference, not source)
+docs/paper_dp/
+# Local xlsx backups (auto-generated before edits)
+docs/*.backup_*.xlsx
+# Training/eval data — regenerable via FedE/scripts/download_paper_data.py
+# (also >100MB, would be rejected by GitHub)
+FedE/selected_data.json
+FedE/train_corpus.json
+FedE/paper_test_data/
+# Validation artifacts: model checkpoints (.bin) + run logs
+.agents/validation_artifacts*/
+.agents/remote_snapshot/
+# Scheduler lock
+.claude/scheduled_tasks.lock
