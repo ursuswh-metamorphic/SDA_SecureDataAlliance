@@ -30,8 +30,8 @@ import flgo.algorithm.fedrag_lora as fedrag_lora
 # at __init__).
 from flgo.benchmark.fedrag_classification import core as fedrag_core
 from flgo.benchmark.fedrag_classification import config as fedrag_config
-fedrag_core.DEFAULT_TEMPERATURE = 0.05
-fedrag_core.DEFAULT_KD_WEIGHT = 1.0
+fedrag_core.DEFAULT_TEMPERATURE = float(os.environ.get('TEMPERATURE', '0.05'))
+fedrag_core.DEFAULT_KD_WEIGHT = float(os.environ.get('KD_WEIGHT', '1.0'))  # KD_WEIGHT=0 ablates KD-GLE
 
 # ── Phase 5: qLoRA gate ──────────────────────────────────────────────────────
 # Reads env var USE_QLORA. Auto-disabled on non-Linux or when bitsandbytes
@@ -52,6 +52,16 @@ if _USE_QLORA_REQUESTED:
 else:
     USE_QLORA = False
 fedrag_config.DEFAULT_USE_QLORA = USE_QLORA
+
+# ── Ablation: full fine-tune gate (Khung 1 cell D/D') ────────────────────────
+# USE_LORA=0 → train ALL of BGE-base (no PEFT). qLoRA is meaningless without
+# LoRA, so it is forced off. Must be set BEFORE flgo.init() reads get_model().
+USE_LORA = os.environ.get('USE_LORA', '1') == '1'
+if not USE_LORA:
+    print('[main_lora] USE_LORA=0 → FULL fine-tune ablation (no PEFT); qLoRA forced off.')
+    USE_QLORA = False
+    fedrag_config.DEFAULT_USE_QLORA = False
+fedrag_config.DEFAULT_USE_LORA = USE_LORA
 
 # Use a separate task path so the existing main.py baseline ('./num5_alpha05')
 # stays untouched and re-runnable.

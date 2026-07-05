@@ -38,6 +38,11 @@ LORA_TARGETS = ['query', 'value']
 # default reads from this constant.
 DEFAULT_USE_QLORA = False
 
+# ── Ablation gate: full fine-tune (no LoRA) when False ───────────────────────
+# Flipped by main_lora.py from env USE_LORA before flgo.init(). Consumed by
+# get_model() below (Khung 1 ablation cell D/D': −PEFT).
+DEFAULT_USE_LORA = True
+
 train_data = None
 val_data = None
 test_data = None
@@ -57,6 +62,21 @@ def get_model(*args, **kwargs) -> torch.nn.Module:
         peft.PeftModel whose .forward forwards kwargs to BertModel.forward.
     """
     quantize = kwargs.get('quantize', DEFAULT_USE_QLORA)
+    use_lora = kwargs.get('use_lora', DEFAULT_USE_LORA)
+
+    # ── Ablation branch: full fine-tune (no PEFT) ───────────────────────────
+    # Returns the raw BGE-base with ALL parameters trainable (no LoRA wrap, no
+    # freeze). fedrag_lora transports the full state; per-sample DP loops over
+    # all 109M params. Heavier but the "−PEFT" ablation cell.
+    if not use_lora:
+        base = BertModel.from_pretrained('BAAI/bge-base-en')
+        for p in base.parameters():
+            p.requires_grad = True
+        trainable = sum(p.numel() for p in base.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in base.parameters())
+        print(f'[config.get_model] FULL fine-tune (no LoRA): '
+              f'{trainable:,}/{total:,} trainable ({trainable / total * 100:.0f}%)')
+        return base
 
     # Phase 5 branch (gated)
     if quantize and _QLORA_AVAILABLE:

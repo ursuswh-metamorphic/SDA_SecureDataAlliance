@@ -54,8 +54,16 @@ def _is_lora_key(key: str) -> bool:
 
 
 def _lora_state_only(state_dict: dict) -> dict:
-    """Return CPU-resident copy of the LoRA-only entries of a state_dict."""
-    return {k: v.detach().cpu() for k, v in state_dict.items() if _is_lora_key(k)}
+    """CPU-resident copy of the TRANSPORTED state.
+
+    LoRA-only when adapter keys are present (Phase 1 default). When none exist
+    — i.e. the full fine-tune ablation (USE_LORA=0) — transport the ENTIRE
+    state so aggregation/checkpointing operate on all trainable weights.
+    """
+    lora = {k: v.detach().cpu() for k, v in state_dict.items() if _is_lora_key(k)}
+    if lora:
+        return lora
+    return {k: v.detach().cpu() for k, v in state_dict.items()}
 
 
 def _calibrate_sigma_quiet(option: dict):
@@ -178,11 +186,16 @@ class Server(BasicServer):
                     break
 
                 if self.current_round >= 0:
-                    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                    filename = f"x-lora_{current_time}_round{self.current_round}.bin"
-                    save_path = os.path.join("./checkpoints", filename)
-                    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-                    torch.save(_lora_state_only(self.model.model.state_dict()), save_path)
+                    round_state = _lora_state_only(self.model.model.state_dict())
+                    # Per-round snapshots only for LoRA (tiny ~1.2MB). Full
+                    # fine-tune state is ~436MB — 50 snapshots would fill the
+                    # disk, so skip and rely on the single final save below.
+                    if any(_is_lora_key(k) for k in round_state):
+                        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                        filename = f"x-lora_{current_time}_round{self.current_round}.bin"
+                        save_path = os.path.join("./checkpoints", filename)
+                        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                        torch.save(round_state, save_path)
                 self.current_round += 1
                 self.global_lr_scheduler(self.current_round)
 
