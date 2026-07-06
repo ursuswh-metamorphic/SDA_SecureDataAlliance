@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -72,6 +73,62 @@ def paper_mrr(retrieved_ids: List, expected_ids: List) -> float:
         if rid in expected_set:
             return 1.0 / (i + 1)
     return 0.0
+
+
+# ── Extended IR metrics (paper reports these in Tables II/III) ──────────────
+# Hit@K uses the paper's definition (paper_hit above, on golden[:K]); Recall,
+# Precision, NDCG, MAP are standard IR; EM follows the paper's F1 truncation
+# convention (evaluate_rag.py:527). All computed from the same retrieved/golden.
+
+def recall_at_k(retrieved_ids: List, golden_ids: List, k: int) -> float:
+    """Fraction of golden ids retrieved within top-k."""
+    if not golden_ids:
+        return 0.0
+    topk = set(retrieved_ids[:k])
+    gs = set(golden_ids)
+    return len(topk & gs) / len(gs)
+
+
+def precision_at_k(retrieved_ids: List, golden_ids: List, k: int) -> float:
+    """Fraction of the top-k retrieved that are golden."""
+    if k <= 0:
+        return 0.0
+    gs = set(golden_ids)
+    return sum(1 for r in retrieved_ids[:k] if r in gs) / k
+
+
+def average_precision(retrieved_ids: List, golden_ids: List) -> float:
+    """Standard Average Precision (basis for MAP)."""
+    if not golden_ids:
+        return 0.0
+    gs = set(golden_ids)
+    hits = 0
+    acc = 0.0
+    for i, r in enumerate(retrieved_ids):
+        if r in gs:
+            hits += 1
+            acc += hits / (i + 1)
+    denom = min(len(gs), len(retrieved_ids))
+    return acc / denom if denom > 0 else 0.0
+
+
+def ndcg_at_k(retrieved_ids: List, golden_ids: List, k: int) -> float:
+    """Binary-relevance NDCG@k."""
+    gs = set(golden_ids)
+    dcg = sum(1.0 / math.log2(i + 2)
+              for i, r in enumerate(retrieved_ids[:k]) if r in gs)
+    n_rel = min(len(gs), k)
+    idcg = sum(1.0 / math.log2(i + 2) for i in range(n_rel))
+    return dcg / idcg if idcg > 0 else 0.0
+
+
+def em_paper(retrieved_ids: List, golden_ids: List) -> float:
+    """Exact Match — top-|golden| retrieved set == golden set (paper's F1
+    truncation convention). Often ~0 in a top-10 protocol with few golden;
+    reported for parity with the paper's Presence-Based group."""
+    if not golden_ids:
+        return 0.0
+    return 1.0 if sorted(retrieved_ids[:len(golden_ids)]) == sorted(golden_ids) else 0.0
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -488,40 +545,46 @@ def run_paper_eval(checkpoint_path: str | None, name: str, split: str,
     sims = q_embs @ chunk_embs.t()       # (Q, C)
     scores, indices = torch.topk(sims, k=min(top_k, len(chunks)), dim=-1)
 
+    KS = (1, 3, 5, 10)                 # @k values (paper uses 1, 5, 10; +3 for DP signal)
     per_query = []
     for qi, q in enumerate(queries):
         retrieved_ids = [chunk_ids[int(i)] for i in indices[qi].tolist()]
         golden_ids = q['key_content']['reference_idx']
+        golden_ids = golden_ids if isinstance(golden_ids, list) else list(golden_ids)
 
-        hit1 = paper_hit(retrieved_ids, golden_ids[0:1])
-        hit10 = paper_hit(retrieved_ids, golden_ids[0:10])
-        mrr = paper_mrr(retrieved_ids, golden_ids)
-
-        per_query.append({
+        row = {
             'qi': qi,
             'company': q.get('other_info', {}).get('company', '?'),
             'doc_name': q.get('other_info', {}).get('doc_name', '?'),
             'n_golden': len(golden_ids),
-            'hit1': hit1,
-            'hit10': hit10,
-            'mrr': mrr,
-            'retrieved_top5': retrieved_ids[:5],
-            'golden_first': golden_ids[:3] if isinstance(golden_ids, list) else [],
-        })
+            'mrr': paper_mrr(retrieved_ids, golden_ids),
+            'map': average_precision(retrieved_ids, golden_ids),
+            'ndcg@10': ndcg_at_k(retrieved_ids, golden_ids, 10),
+            'em': em_paper(retrieved_ids, golden_ids),
+            'retrieved_top10': retrieved_ids[:10],   # full top-10 → recompute offline
+            'golden_ids': golden_ids,
+        }
+        for k in KS:
+            row[f'hit@{k}'] = paper_hit(retrieved_ids, golden_ids[0:k])   # paper def
+            row[f'recall@{k}'] = recall_at_k(retrieved_ids, golden_ids, k)
+            row[f'precision@{k}'] = precision_at_k(retrieved_ids, golden_ids, k)
+        per_query.append(row)
 
     n = len(per_query)
-    agg = {
-        'hit1': sum(q['hit1'] for q in per_query) / n * 100,
-        'hit10': sum(q['hit10'] for q in per_query) / n * 100,
-        'mrr': sum(q['mrr'] for q in per_query) / n * 100,
-    }
+    metric_keys = (['mrr', 'map', 'ndcg@10', 'em']
+                   + [f'hit@{k}' for k in KS]
+                   + [f'recall@{k}' for k in KS]
+                   + [f'precision@{k}' for k in KS])
+    agg = {k: round(sum(r[k] for r in per_query) / n * 100, 2) for k in metric_keys}
 
-    # ── Print ─────────────────────────────────────────────────────────────
+    # ── Print (grouped like paper Tables II/III) ──────────────────────────
     print()
     print(f'=== Paper-protocol results: {name} (split={split}, n={n}) ===')
-    print(f'  Hit@1   = {agg["hit1"]:6.2f}   (paper def: any retrieved == first golden)')
-    print(f'  Hit@10  = {agg["hit10"]:6.2f}   (paper def: any retrieved in first 10 golden)')
-    print(f'  MRR     = {agg["mrr"]:6.2f}')
+    print(f'  [Presence]  Hit@1={agg["hit@1"]:.2f}  Hit@3={agg["hit@3"]:.2f}  '
+          f'Hit@5={agg["hit@5"]:.2f}  Hit@10={agg["hit@10"]:.2f}  EM={agg["em"]:.2f}')
+    print(f'  [Order]     MRR={agg["mrr"]:.2f}  MAP={agg["map"]:.2f}  NDCG@10={agg["ndcg@10"]:.2f}')
+    print(f'  [Threshold] Recall@1/5/10={agg["recall@1"]:.2f}/{agg["recall@5"]:.2f}/{agg["recall@10"]:.2f}  '
+          f'Precision@1/5/10={agg["precision@1"]:.2f}/{agg["precision@5"]:.2f}/{agg["precision@10"]:.2f}')
     print()
 
     # ── Save ──────────────────────────────────────────────────────────────
