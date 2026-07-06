@@ -31,8 +31,11 @@ VENV="${VENV:-$REPO_ROOT/venv}"
 BATCH="${BATCH:-64}"
 
 cd "$REPO_ROOT/FedE"
-# shellcheck disable=SC1090
-[ -d "$VENV" ] && source "$VENV/bin/activate"
+# Activate the venv — search common locations ($VENV override, /root/venv from
+# the quickstart setup, or repo_root/../venv). shellcheck disable=SC1090
+for _v in "$VENV" /root/venv "$REPO_ROOT/../venv"; do
+  [ -f "$_v/bin/activate" ] && { source "$_v/bin/activate"; echo "[venv] $_v"; break; }
+done
 export PYTHONUNBUFFERED=1
 
 # name : checkpoint file ('' = pretrained baseline, no checkpoint)

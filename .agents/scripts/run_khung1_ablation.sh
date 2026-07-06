@@ -45,8 +45,10 @@ PY
 echo "[precheck] CPU OK ✓"
 
 cd "$REPO_ROOT/FedE"
-# shellcheck disable=SC1090
-[ -d "$VENV" ] && source "$VENV/bin/activate"
+# Activate venv — search common locations. shellcheck disable=SC1090
+for _v in "$VENV" /root/venv "$REPO_ROOT/../venv"; do
+  [ -f "$_v/bin/activate" ] && { source "$_v/bin/activate"; echo "[venv] $_v"; break; }
+done
 export PYTHONUNBUFFERED=1
 [ -f selected_data.json ] || { echo "❌ selected_data.json missing"; exit 1; }
 [ -d paper_test_data ]    || { echo "❌ paper_test_data/ missing"; exit 1; }
