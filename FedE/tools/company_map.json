@@ -1,0 +1,9 @@
+{
+  "_comment": "M4: canonical company mapping. Rule: uppercase + strip non-alphanumerics, then apply aliases. Covers 43 selected_data companies (2 typo variants) and 32 QA company spellings. Verified 2026-07-22.",
+  "canonical_rule": "uppercase_alnum_only",
+  "aliases": {
+    "ACTIVSIONBLIZZARD": "ACTIVISIONBLIZZARD",
+    "AESCORPORATION": "AES",
+    "JOHNSONJOHNSON": "JOHNSON"
+  }
+}

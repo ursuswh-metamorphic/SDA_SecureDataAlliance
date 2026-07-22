@@ -28,17 +28,17 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 FEDE_ROOT = os.path.abspath(os.path.join(HERE, '..'))
 sys.path.insert(0, FEDE_ROOT)
 
-import torch  # noqa: E402
+# Gate on torch + TenSEAL availability. pytest.importorskip marks the module
+# as SKIPPED instead of killing the pytest collection process (E10 fix — the
+# old sys.exit(0) here broke collection of the whole test session).
+import pytest  # noqa: E402
 
-# Gate on TenSEAL availability.
-try:
-    import tenseal as ts  # noqa: F401
-except ImportError as e:
-    print('=' * 60)
-    print(f'[test_ckks_correctness] SKIP — tenseal not installed: {e}')
-    print('To install: pip install tenseal     (Linux + Python <=3.12)')
-    print('=' * 60)
-    sys.exit(0)
+torch = pytest.importorskip('torch', reason='torch not installed in this env')
+ts = pytest.importorskip(
+    'tenseal',
+    reason='tenseal not installed (no wheels for Windows + Python 3.14; '
+           'run on Linux + Python <=3.12 or the Vast.ai training image)',
+)
 
 # Import primitives by file path to avoid triggering flgo's heavy __init__
 # (which imports requests / transformers / peft). The primitives module
@@ -202,6 +202,12 @@ def main():
     print(f'Timing: encrypt {t_encrypt:.2f}s, aggregate {t_aggregate:.2f}s, '
           f'decrypt {t_decrypt:.2f}s.')
     print('=' * 60)
+
+
+def test_ckks_correctness():
+    """pytest entry point — the module used to be script-only, which meant
+    pytest collected zero tests from it even when tenseal was available."""
+    main()
 
 
 if __name__ == '__main__':

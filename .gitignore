@@ -212,3 +212,8 @@ FedE/paper_test_data/
 .agents/remote_snapshot/
 # Scheduler lock
 .claude/scheduled_tasks.lock
+
+# Q1 remediation (2026-07-22): plans/audit-trail markdown MUST be tracked (pre-registration);
+# the 141MB corpus manifest is regenerable + hash-frozen, keep it out.
+!.agents/**/*.md
+artifacts/data/corpus_v1.jsonl

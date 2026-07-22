@@ -1,0 +1,15 @@
+ M .claude/settings.json
+ D FedE/num5_alpha05/data.json
+ D FedE/num5_alpha05/info
+?? .agents/scripts/check_server.py
+?? .agents/scripts/detached_run.py
+?? .agents/scripts/just_run_remote.py
+?? .agents/scripts/poll_evals.sh
+?? .agents/scripts/run_remote_ckks_test.py
+?? .agents/scripts/sync_run.py
+?? .agents/setup_remote_quickstart.sh
+?? .codex/
+?? artifacts/
+?? docs/Bao_cao_tham_dinh_Q1_FedE4RAG_2026-07-18.docx
+?? docs/Ke_hoach_khac_phuc_va_chay_lai_FedE4RAG_Q1_2026-07-18.docx
+?? docs/bao_cao_phase7c_full.html
