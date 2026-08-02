@@ -86,7 +86,8 @@ def load_qrels(path: str) -> dict[str, set[str]]:
 
 
 def build_model(model_name: str, checkpoint: str | None, lora_checkpoint: str | None,
-                device: str):
+                device: str, lora_r: int = 8, lora_alpha: int = 16,
+                lora_dropout: float = 0.05):
     from transformers import AutoModel, AutoTokenizer
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModel.from_pretrained(model_name)
@@ -98,16 +99,52 @@ def build_model(model_name: str, checkpoint: str | None, lora_checkpoint: str | 
               f"(missing={len(missing)}, unexpected={len(unexpected)})")
     if lora_checkpoint:
         try:
-            from peft import PeftModel  # noqa: F401
+            from peft import LoraConfig, get_peft_model
+            from flgo.benchmark.fedrag_classification.config import LORA_TARGETS
         except ImportError as e:
             raise RuntimeError(
                 "LoRA checkpoint evaluation requires peft; install it or merge "
                 "the adapter into a full state dict first."
             ) from e
-        raise NotImplementedError(
-            "LoRA adapter loading is wired in Giai đoạn C (run_experiment.py "
-            "merges adapters before eval)."
+        model = get_peft_model(
+            model,
+            LoraConfig(
+                r=lora_r,
+                lora_alpha=lora_alpha,
+                target_modules=LORA_TARGETS,
+                lora_dropout=lora_dropout,
+                bias="none",
+            ),
         )
+        raw_state = torch.load(
+            lora_checkpoint, map_location="cpu", weights_only=True
+        )
+        expected = set(model.state_dict())
+        state = {}
+        for key, value in raw_state.items():
+            normalized = key if key in expected else key.removeprefix("model.")
+            if normalized not in expected:
+                raise RuntimeError(
+                    f"LoRA checkpoint key not present in configured adapter: {key}"
+                )
+            if "lora" not in normalized.lower():
+                raise RuntimeError(
+                    f"non-LoRA tensor found in LoRA-only checkpoint: {key}"
+                )
+            state[normalized] = value
+        missing, unexpected = model.load_state_dict(state, strict=False)
+        if unexpected or len(state) != len(raw_state):
+            raise RuntimeError(
+                f"LoRA checkpoint load mismatch: loaded={len(state)}, "
+                f"source={len(raw_state)}, unexpected={unexpected}"
+            )
+        print(
+            f"[eval_clean] loaded LoRA checkpoint {lora_checkpoint} "
+            f"(r={lora_r}, alpha={lora_alpha}, dropout={lora_dropout}; "
+            f"{len(state)} adapter tensors; {len(missing)} frozen-base "
+            "tensors supplied by pretrained model)"
+        )
+        model = model.merge_and_unload()
     model.eval().to(device)
     return model, tokenizer
 
@@ -144,6 +181,9 @@ def main():
     p.add_argument("--model", default="BAAI/bge-base-en-v1.5")
     p.add_argument("--checkpoint", default=None, help="full state_dict .bin")
     p.add_argument("--lora-checkpoint", default=None)
+    p.add_argument("--lora-r", type=int, default=8)
+    p.add_argument("--lora-alpha", type=int, default=16)
+    p.add_argument("--lora-dropout", type=float, default=0.05)
     p.add_argument("--top-k", type=int, default=100)
     p.add_argument("--batch-size", type=int, default=32)
     p.add_argument("--max-length", type=int, default=512)
@@ -158,7 +198,23 @@ def main():
     p.add_argument("--smoke-passages", type=int, default=0,
                    help="SMOKE ONLY: index = qrel passages + N fillers; output "
                         "is tagged smoke=true and must never enter a table")
+    p.add_argument("--save-embeddings", default=None,
+                   help="cache corpus embeddings to this .pt after encoding "
+                        "(full runs only)")
+    p.add_argument("--load-embeddings", default=None,
+                   help="reuse corpus embeddings from a cache .pt; validated "
+                        "against corpus sha256/model/pooling/max_length")
     args = p.parse_args()
+
+    if args.lora_r <= 0 or args.lora_alpha <= 0:
+        raise SystemExit("--lora-r and --lora-alpha must be positive")
+    if not 0.0 <= args.lora_dropout < 1.0:
+        raise SystemExit("--lora-dropout must be in [0, 1)")
+    if args.load_embeddings and args.smoke_passages:
+        raise SystemExit("--load-embeddings caches the FULL corpus; "
+                         "incompatible with --smoke-passages")
+    if args.save_embeddings and args.smoke_passages:
+        raise SystemExit("--save-embeddings only allowed on full runs")
 
     torch.manual_seed(args.seed)
 
@@ -188,13 +244,48 @@ def main():
               f"({len(keep)} qrel + {len(filler)} filler) — NOT a real run.")
 
     model, tokenizer = build_model(args.model, args.checkpoint,
-                                   args.lora_checkpoint, args.device)
+                                   args.lora_checkpoint, args.device,
+                                   args.lora_r, args.lora_alpha,
+                                   args.lora_dropout)
 
-    print(f"[eval_clean] encoding {len(texts)} passages...")
-    t0 = time.time()
-    p_embs = encode(model, tokenizer, texts, args.device, args.batch_size,
-                    args.max_length, args.pooling)
-    t_corpus = time.time() - t0
+    corpus_sha = sha256_file(args.corpus)
+    cache_meta = {"corpus_sha256": corpus_sha, "model": args.model,
+                  "checkpoint": args.checkpoint, "pooling": args.pooling,
+                  "max_length": args.max_length}
+    if args.lora_checkpoint:
+        cache_meta.update({
+            "lora_checkpoint": args.lora_checkpoint,
+            "lora_r": args.lora_r,
+            "lora_alpha": args.lora_alpha,
+            "lora_dropout": args.lora_dropout,
+        })
+
+    if args.load_embeddings:
+        cache = torch.load(args.load_embeddings, map_location="cpu",
+                           weights_only=True)
+        if cache["meta"] != cache_meta:
+            raise RuntimeError(
+                f"embedding cache mismatch:\n  cache: {cache['meta']}\n"
+                f"  args : {cache_meta}")
+        if cache["pids"] != pids:
+            raise RuntimeError("embedding cache passage_id order differs from "
+                               "corpus — rebuild the cache")
+        p_embs = cache["embs"]
+        t_corpus = 0.0
+        print(f"[eval_clean] loaded {len(pids)} cached corpus embeddings "
+              f"from {args.load_embeddings}")
+    else:
+        print(f"[eval_clean] encoding {len(texts)} passages...")
+        t0 = time.time()
+        p_embs = encode(model, tokenizer, texts, args.device, args.batch_size,
+                        args.max_length, args.pooling)
+        t_corpus = time.time() - t0
+        if args.save_embeddings:
+            os.makedirs(os.path.dirname(os.path.abspath(args.save_embeddings)),
+                        exist_ok=True)
+            torch.save({"meta": cache_meta, "pids": pids, "embs": p_embs},
+                       args.save_embeddings)
+            print(f"[eval_clean] saved corpus embeddings -> {args.save_embeddings}")
 
     print(f"[eval_clean] encoding {len(queries)} queries...")
     t0 = time.time()
@@ -256,6 +347,10 @@ def main():
             "qrels": {"path": args.qrels, "sha256": sha256_file(args.qrels)},
             "model": args.model,
             "checkpoint": args.checkpoint,
+            "lora_checkpoint": args.lora_checkpoint,
+            "lora_r": args.lora_r if args.lora_checkpoint else None,
+            "lora_alpha": args.lora_alpha if args.lora_checkpoint else None,
+            "lora_dropout": args.lora_dropout if args.lora_checkpoint else None,
             "pooling": args.pooling,
             "query_instruction": args.query_instruction,
             "top_k": args.top_k,

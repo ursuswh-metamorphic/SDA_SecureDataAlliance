@@ -388,9 +388,16 @@ python -X utf8 tools/aggregate_results.py --runs "artifacts/runs/*" --primary mr
 - [x] A3. audit_protocol pass — DONE 2026-07-22: ALL HARD GATES PASS (coverage/restore-integrity/exact-dup/page-leak-0/stable-ID/index-independence). REPORT: parent overlap 354/354 by design; **96 selected_data records trích từ trang golden restored → PHẢI loại 96 records này khỏi training data ở Giai đoạn C**
 - [x] B1. eval_clean.py + tools/ir_metrics.py (metric chuẩn + dedupe, AP@k theo TREC map_cut, fail-fast, TREC run + per-query JSON + manifest hash)
 - [x] B2. test_ir_metrics.py 11/11 pass, khớp ranx + pytrec_eval trong 1e-9; test_ckks sys.exit(0) → pytest.importorskip (cả torch lẫn tenseal), thêm pytest entry point
-- [~] B3. P1 append/no-append/P3 sensitivity table — SMOKE PASS 2026-07-22: eval_clean end-to-end trên index rút gọn (568 passages = 68 qrel + 500 filler, CPU) cho MRR@10=62.47, Hit@1/5/10=54/74/80, recall@10=76.33 → restored pages RETRIEVABLE, pipeline + fail-fast + manifest hoạt động. CÒN LẠI: full P3 pretrained (30.496 passages — GPU hoặc ~1-2h CPU) + 4 lệnh P1 append/no-append để hoàn thành bảng sensitivity
-- [ ] C1. masked pooling + weighted FedAvg + company split + config/seed
-- [ ] C2. B0→B5 baselines qua smoke/pilot; centralized học được
+- [x] B3. P1 append/no-append/P3 sensitivity table — FULL PASS 2026-07-29: eval_clean full P3 pretrained (30.496 passages) cho MRR@10=25.18%, Hit@1/5/10=16.00/36.00/44.00, recall@10=36.33% → Baseline B0 đã sẵn sàng.
+- [x] C1. masked pooling + weighted FedAvg + company split + config/seed — FULL PASS 2026-07-29: 33.553 clean/no-leak records; 41 companies assigned exclusively to 5 clients by deterministic LPT (6.696/6.709/6.692/6.756/6.700 records); weighted FedAvg fixed to use FLGo `received_clients → client.datavol`; numerical regression test + 1-round/1-step CPU smoke pass.
+- [x] C2. B0→B5 baselines qua smoke/pilot; centralized học được
+  - [x] B0 pretrained frozen, P3 validation: MRR@10=25.18, Hit@1/10=16.00/44.00, NDCG@10=25.84 (n=50).
+  - [x] B1 centralized full-FT pilot (seed 13, 15×50): MRR@10=34.52, Hit@1/10=28.00/48.00, NDCG@10=32.97; +9.34 MRR points vs B0.
+  - [x] B2 local-only full-FT, 5 company-exclusive clients, company-routed validation (seed 13, 15×50/client): MRR@10=29.90, Hit@1/10=24.00/40.00, NDCG@10=29.86; +4.72 vs B0 and -4.62 vs B1. All 50 validation queries routed exactly once; test remained locked.
+  - [x] B3 FedAvg full-FT pilot (seed 13, 15×50): MRR@10=33.89, Hit@1/10=28.00/50.00, NDCG@10=32.98; +8.71 vs B0, +3.99 vs B2, -0.63 vs B1.
+  - [x] B3 FedAvg-LoRA pilot (seed 13, 15×50, r=8, α=16, LR=1e-5): MRR@10=26.97, Hit@1/10=20.00/42.00, NDCG@10=26.25; +1.79 vs B0 but -6.92 vs full-FT. LoRA LR/rank tuning required before B5/DP.
+  - [x] B4 FedProx full-FT (seed 13, μ sweep {0.001,0.01,0.1}, selected μ=0.001; full 15×50): MRR@10=31.87, Hit@1/10=24.00/50.00, NDCG@10=31.85; -2.02 MRR vs B3 FedAvg full-FT.
+  - [x] B5 tuned FedAvg-LoRA+KD (seed 13; LR sweep {5e-5,1e-4,2e-4}; rank sweep {8,16,32}; selected LR=5e-5, r=8, α=16; full paired KD 0 vs 1): KD=1 đạt MRR@10=28.85, Hit@1/10=22.00/48.00, NDCG@10=28.42; +1.26 MRR vs tuned no-KD và +1.88 vs B3 LoRA, nhưng -5.04 vs B3 full-FT. Test vẫn khóa.
 - [ ] D. client-level DP + accountant cross-check + noise=0/clip-only controls
 - [ ] E. CKKS process isolation + negative decrypt test + params + overhead
 - [ ] F. freeze config → 5 seeds × ma trận → locked test 1 lần

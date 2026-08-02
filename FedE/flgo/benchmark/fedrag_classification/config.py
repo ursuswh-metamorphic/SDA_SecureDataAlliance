@@ -42,6 +42,7 @@ DEFAULT_USE_QLORA = False
 # Flipped by main_lora.py from env USE_LORA before flgo.init(). Consumed by
 # get_model() below (Khung 1 ablation cell D/D': −PEFT).
 DEFAULT_USE_LORA = True
+DEFAULT_MODEL_NAME = 'BAAI/bge-base-en-v1.5'
 
 train_data = None
 val_data = None
@@ -63,13 +64,14 @@ def get_model(*args, **kwargs) -> torch.nn.Module:
     """
     quantize = kwargs.get('quantize', DEFAULT_USE_QLORA)
     use_lora = kwargs.get('use_lora', DEFAULT_USE_LORA)
+    model_name = kwargs.get('model_name', DEFAULT_MODEL_NAME)
 
     # ── Ablation branch: full fine-tune (no PEFT) ───────────────────────────
     # Returns the raw BGE-base with ALL parameters trainable (no LoRA wrap, no
     # freeze). fedrag_lora transports the full state; per-sample DP loops over
     # all 109M params. Heavier but the "−PEFT" ablation cell.
     if not use_lora:
-        base = BertModel.from_pretrained('BAAI/bge-base-en')
+        base = BertModel.from_pretrained(model_name)
         for p in base.parameters():
             p.requires_grad = True
         trainable = sum(p.numel() for p in base.parameters() if p.requires_grad)
@@ -88,14 +90,14 @@ def get_model(*args, **kwargs) -> torch.nn.Module:
             bnb_4bit_compute_dtype=torch.bfloat16,
         )
         base = BertModel.from_pretrained(
-            'BAAI/bge-base-en',
+            model_name,
             quantization_config=bnb_config,
         )
         base = prepare_model_for_kbit_training(base)
     else:
         if quantize and not _QLORA_AVAILABLE:
             print(f'[config.get_model] quantize=True ignored: bitsandbytes unavailable on {platform.system()}.')
-        base = BertModel.from_pretrained('BAAI/bge-base-en')
+        base = BertModel.from_pretrained(model_name)
 
     lora_config = LoraConfig(
         r=LORA_R,

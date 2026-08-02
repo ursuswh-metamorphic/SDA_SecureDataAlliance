@@ -112,13 +112,9 @@ def _rdp_to_epsilon_single(alpha: float, rdp: float, delta: float) -> float:
     """
     Convert a single (α, ε_α)-RDP guarantee to (ε, δ)-DP.
 
-    Formula (Mironov 2017, Proposition 3):
-        ε(δ) = ε_α + log((α−1)/α) − (log δ + log(α−1)) / α
-
-    This is equivalent to the common form:
-        ε(δ) = ε_α − log(δ) / (α − 1)  [loose version, used for simplicity]
-
-    We use the tighter Proposition 3 formula.
+    Uses Theorem 21 from Balle et al. (AISTATS 2020), also used by
+    Opacus:
+        ε(δ) = ε_α − (log δ + log α)/(α − 1) + log((α − 1)/α)
     """
     if alpha <= 1.0:
         raise ValueError(f"Rényi order α must be > 1, got {alpha}")
@@ -129,14 +125,12 @@ def _rdp_to_epsilon_single(alpha: float, rdp: float, delta: float) -> float:
     if rdp == 0.0:
         return 0.0
 
-    # Proposition 3: ε = ε_α + log((α-1)/α) − (log(δ) + log(α-1)) / α
-    # Equivalent to: ε = ε_α - log(δ)/(α-1)  when simplified
-    # We implement the tight version:
+    # Balle et al. (2020), Theorem 21.
     try:
         eps = (
             rdp
+            - (math.log(delta) + math.log(alpha)) / (alpha - 1.0)
             + math.log((alpha - 1.0) / alpha)
-            - (math.log(delta) + math.log(alpha - 1.0)) / alpha
         )
     except (ValueError, OverflowError):
         eps = float("inf")

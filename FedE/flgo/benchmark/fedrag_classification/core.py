@@ -22,6 +22,10 @@ import flgo.benchmark
 import os.path
 import torch
 
+FEDE_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..")
+)
+
 # ── Phase 3 loss hyperparameters ──────────────────────────────────────────────
 # Module-level defaults so main_lora.py / main_full.py can override BEFORE
 # flgo.init() instantiates the TaskCalculator (which reads them at __init__).
@@ -31,6 +35,8 @@ import torch
 #     fedrag_core.DEFAULT_KD_WEIGHT = 1.0
 DEFAULT_TEMPERATURE = 0.05  # SimCSE / E5 / BGE retrieval default
 DEFAULT_KD_WEIGHT = 1.0     # was 100x for MSE; 1.0 is correct for KL (different magnitude)
+DEFAULT_MODEL_NAME = 'BAAI/bge-base-en-v1.5'
+DEFAULT_POOLING = 'cls'
 
 
 def collate_batch(batch):
@@ -57,11 +63,36 @@ def cos_sim(a, b):
     return torch.mm(a_norm, torch.transpose(b_norm, 0, 1))
 
 
+def pool_embeddings(last_hidden_state, model_inputs):
+    """Apply the single frozen pooling rule used by every training path."""
+    if DEFAULT_POOLING == 'cls':
+        return last_hidden_state[:, 0]
+    if DEFAULT_POOLING != 'masked_mean':
+        raise ValueError(f'unsupported pooling: {DEFAULT_POOLING}')
+    mask = model_inputs['attention_mask'].unsqueeze(-1).expand(
+        last_hidden_state.size()
+    ).float()
+    summed = torch.sum(last_hidden_state * mask, dim=1)
+    return summed / torch.clamp(mask.sum(dim=1), min=1e-9)
+
+
 class FEDRAG(Dataset):
-    def __init__(self, train=True):
+    def __init__(self, train=True, rawdata_path="./selected_data_clean.json"):
         self.train = train
-        # TODO 加载数据集
-        with open("./selected_data.json", 'r', encoding='utf-8') as f:
+        if not os.path.isabs(rawdata_path):
+            cwd_candidate = os.path.abspath(rawdata_path)
+            fede_candidate = os.path.join(FEDE_DIR, rawdata_path)
+            rawdata_path = (
+                cwd_candidate if os.path.exists(cwd_candidate)
+                else fede_candidate
+            )
+        if not os.path.exists(rawdata_path):
+            raise FileNotFoundError(
+                f"clean training data not found: {rawdata_path}. "
+                "Run tools/clean_training_data.py first; refusing to fall "
+                "back to selected_data.json because it contains known leaks."
+            )
+        with open(rawdata_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
         self.questions = []
@@ -84,18 +115,18 @@ class FEDRAG(Dataset):
 
 
 class TaskGenerator(BasicTaskGenerator):
-    # TODO 加载数据集
-    def __init__(self, rawdata_path="./selected_data.json"):
+    def __init__(self, rawdata_path="./selected_data_clean.json"):
         super(TaskGenerator, self).__init__(benchmark='fedrag_classification', rawdata_path=rawdata_path)
         # Regular expression to capture an actors name, and line continuation
 
     def load_data(self):
-        self.train_data = FEDRAG(train=True)
-        self.test_data = FEDRAG(train=False)
+        self.train_data = FEDRAG(train=True, rawdata_path=self.rawdata_path)
+        self.test_data = FEDRAG(train=False, rawdata_path=self.rawdata_path)
         return
 
     def partition(self):
         self.local_datas = self.partitioner(self.train_data)
+        self.num_clients = len(self.local_datas)
 
 
 class TaskPipe(BasicTaskPipe):
@@ -118,15 +149,26 @@ class TaskPipe(BasicTaskPipe):
         client_names = self.gen_client_names(len(generator.local_datas))
         feddata = {'client_names': client_names, 'server_data': list(range(len(generator.test_data))),
                    'rawdata_path': generator.rawdata_path}
-        for cid in range(len(client_names)): feddata[client_names[cid]] = {'data': generator.local_datas[cid], }
+        if hasattr(generator.partitioner, "client_companies"):
+            feddata["partition_metadata"] = {
+                "strategy": str(generator.partitioner),
+                "client_companies": generator.partitioner.client_companies,
+                "company_to_client": generator.partitioner.company_to_client,
+                "client_sizes": generator.partitioner.client_sizes,
+            }
+        for cid in range(len(client_names)):
+            feddata[client_names[cid]] = {'data': generator.local_datas[cid], }
         with open(os.path.join(self.task_path, 'data.json'), 'w') as outf:
             json.dump(feddata, outf)
         return
 
     def load_data(self, running_time_option) -> dict:
         # load the datasets
-        train_data = FEDRAG(train=True)
-        test_data = FEDRAG(train=False)
+        rawdata_path = self.feddata.get(
+            'rawdata_path', './selected_data_clean.json'
+        )
+        train_data = FEDRAG(train=True, rawdata_path=rawdata_path)
+        test_data = FEDRAG(train=False, rawdata_path=rawdata_path)
         # rearrange data for server
         server_data_test, server_data_val = self.split_dataset(test_data, running_time_option['test_holdout'])
         task_data = {'server': {'test': server_data_test, 'val': server_data_val}}
@@ -144,7 +186,7 @@ class TaskCalculator(GeneralCalculator):
         self.DataLoader = torch.utils.data.DataLoader
         self.criterion = torch.nn.CrossEntropyLoss()
         # TODO 加载模型
-        self.tokenizer = BertTokenizer.from_pretrained('BAAI/bge-base-en')
+        self.tokenizer = BertTokenizer.from_pretrained(DEFAULT_MODEL_NAME)
 
         # Phase 3: read loss hyperparameters from module-level defaults at
         # construction time. Entrypoint scripts override DEFAULT_TEMPERATURE /
@@ -193,13 +235,17 @@ class TaskCalculator(GeneralCalculator):
                                          max_length=max_length)
         question_inputs.to(self.device)
         question_outputs = model(**question_inputs)
-        question_pooled_tensors = torch.mean(question_outputs.last_hidden_state, dim=1, keepdim=False)
+        question_pooled_tensors = pool_embeddings(
+            question_outputs.last_hidden_state, question_inputs
+        )
 
         reference_inputs = self.tokenizer(references, return_tensors="pt", padding=True, truncation=True,
                                           max_length=max_length)
         reference_inputs.to(self.device)
         reference_outputs = model(**reference_inputs)
-        reference_pooled_tensors = torch.mean(reference_outputs.last_hidden_state, dim=1, keepdim=False)
+        reference_pooled_tensors = pool_embeddings(
+            reference_outputs.last_hidden_state, reference_inputs
+        )
 
         logits = cos_sim(question_pooled_tensors, reference_pooled_tensors)
         logits = logits.to(self.device)
@@ -231,14 +277,18 @@ class TaskCalculator(GeneralCalculator):
         question_inputs.to(self.device)
         with torch.no_grad():
             question_outputs = model(**question_inputs)
-        question_pooled_tensors = torch.mean(question_outputs.last_hidden_state, dim=1, keepdim=False)
+        question_pooled_tensors = pool_embeddings(
+            question_outputs.last_hidden_state, question_inputs
+        )
 
         reference_inputs = self.tokenizer(references, return_tensors="pt", padding=True, truncation=True,
                                           max_length=max_length)
         reference_inputs.to(self.device)
         with torch.no_grad():
             reference_outputs = model(**reference_inputs)
-        reference_pooled_tensors = torch.mean(reference_outputs.last_hidden_state, dim=1, keepdim=False)
+        reference_pooled_tensors = pool_embeddings(
+            reference_outputs.last_hidden_state, reference_inputs
+        )
 
         logits = cos_sim(question_pooled_tensors, reference_pooled_tensors)
         return logits

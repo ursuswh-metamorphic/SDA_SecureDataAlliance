@@ -27,6 +27,7 @@ from .fedbase import BasicClient
 
 # Reuse per-sample helpers from fedrag_dp (do NOT modify that file).
 from .fedrag_dp import _get_single_sample, _get_batch_size, _compute_grad_norm
+from flgo.benchmark.fedrag_classification.core import pool_embeddings
 
 # Import privacy accountant from project-level privacy/ module.
 _PRIVACY_DIR = os.path.abspath(
@@ -236,12 +237,38 @@ class Server(BasicServer):
                     f'extra={set(d.keys()) - keys}'
                 )
 
-        # Plain mean across clients (Phase-1: no server-side DP, no weighting).
+        # Standard FedAvg: sum(n_k * w_k) / sum(n_k). FLGo stores the IDs
+        # aligned with the received model list in ``received_clients`` and the
+        # local sample count on each client as ``datavol``.
         K = len(lora_dicts)
+        received_clients = getattr(self, 'received_clients', None)
+        clients = getattr(self, 'clients', None)
+        if received_clients is None or clients is None:
+            raise RuntimeError(
+                '[fedrag_lora.Server.aggregate] client sample counts are '
+                'required for weighted FedAvg'
+            )
+        if len(received_clients) != K:
+            raise RuntimeError(
+                f'[fedrag_lora.Server.aggregate] received client/model count '
+                f'mismatch: {len(received_clients)} != {K}'
+            )
+        sizes = [clients[cid].datavol for cid in received_clients]
+        total_size = sum(sizes)
+        if total_size <= 0:
+            raise RuntimeError(
+                '[fedrag_lora.Server.aggregate] total client datavol must be '
+                'positive'
+            )
+        weights = [size / total_size for size in sizes]
+
         averaged = {}
         for k in keys:
             stacked = torch.stack([d[k].float() for d in lora_dicts], dim=0)
-            averaged[k] = stacked.mean(dim=0)
+            w_tensor = torch.tensor(
+                weights, device=stacked.device, dtype=stacked.dtype
+            ).view(-1, *([1] * (stacked.dim() - 1)))
+            averaged[k] = (stacked * w_tensor).sum(dim=0)
 
         # Apply averaged LoRA back into model_old. Server.model is a
         # fedllm.Model FModule wrapper whose state_dict prefixes every key with
@@ -260,8 +287,11 @@ class Server(BasicServer):
             model_old_sd[full_k] = v.to(device=target.device, dtype=target.dtype)
         model_old.load_state_dict(model_old_sd, strict=False)
 
-        print(f'[fedrag_lora.Server.aggregate] Averaged {len(averaged)} LoRA tensors '
-              f'across K={K} clients (base weights untouched).')
+        print(
+            f'[fedrag_lora.Server.aggregate] Weighted {len(averaged)} LoRA '
+            f'tensors across K={K} clients; datavol={sizes} '
+            f'(base weights untouched).'
+        )
 
         # Phase 2: tick the privacy accountant once per round.
         if getattr(self, '_rdp_accountant', None) is not None:
@@ -466,7 +496,8 @@ class Client(BasicClient):
                     references, return_tensors='pt', padding=True,
                     truncation=True, max_length=max_length,
                 ).to(self.device)
-                ref_out = local_model(**ref_inp).last_hidden_state.mean(dim=1)
+                ref_hidden = local_model(**ref_inp).last_hidden_state
+                ref_out = pool_embeddings(ref_hidden, ref_inp)
                 ref_embs = torch.nn.functional.normalize(ref_out, dim=-1, p=2)
                 ref_embs = ref_embs.detach()                              # (B, D)
 
@@ -475,10 +506,12 @@ class Client(BasicClient):
                     questions, return_tensors='pt', padding=True,
                     truncation=True, max_length=max_length,
                 ).to(self.device)
-                tq_out = model(**tq_inp).last_hidden_state.mean(dim=1)
+                tq_hidden = model(**tq_inp).last_hidden_state
+                tq_out = pool_embeddings(tq_hidden, tq_inp)
                 tq_n = torch.nn.functional.normalize(tq_out, dim=-1, p=2)
 
-                tr_out = model(**ref_inp).last_hidden_state.mean(dim=1)
+                tr_hidden = model(**ref_inp).last_hidden_state
+                tr_out = pool_embeddings(tr_hidden, ref_inp)
                 tr_n = torch.nn.functional.normalize(tr_out, dim=-1, p=2)
 
                 teacher_sim = (tq_n @ tr_n.t()).detach()                  # (B, B)
@@ -500,7 +533,8 @@ class Client(BasicClient):
                     [questions[i]], return_tensors='pt', padding=True,
                     truncation=True, max_length=max_length,
                 ).to(self.device)
-                q_out = local_model(**q_inp).last_hidden_state.mean(dim=1)
+                q_hidden = local_model(**q_inp).last_hidden_state
+                q_out = pool_embeddings(q_hidden, q_inp)
                 q_n = torch.nn.functional.normalize(q_out, dim=-1, p=2)   # (1, D)
 
                 # (1, B) row: this sample's similarity to all B refs.

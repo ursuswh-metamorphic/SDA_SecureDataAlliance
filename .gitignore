@@ -210,6 +210,7 @@ FedE/paper_test_data/
 # Validation artifacts: model checkpoints (.bin) + run logs
 .agents/validation_artifacts*/
 .agents/remote_snapshot/
+FedE/x-lora_*.bin
 # Scheduler lock
 .claude/scheduled_tasks.lock
 
@@ -217,3 +218,6 @@ FedE/paper_test_data/
 # the 141MB corpus manifest is regenerable + hash-frozen, keep it out.
 !.agents/**/*.md
 artifacts/data/corpus_v1.jsonl
+# Official FedE4RAG release downloaded by validate_paper_faithful_data.py.
+# Keep the small hash manifest, not the ~150 MB source payload.
+artifacts/data/paper_faithful_source/

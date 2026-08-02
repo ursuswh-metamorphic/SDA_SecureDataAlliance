@@ -17,6 +17,7 @@ To use the partitioner, you can specify Partitioner in the configuration dict fo
 
 from abc import abstractmethod, ABCMeta
 import random
+import re
 import numpy as np
 import collections
 import torch
@@ -122,6 +123,129 @@ class IIDPartitioner(BasicPartitioner):
         d_idxs = np.random.permutation(len(data))
         local_datas = np.split(d_idxs, np.cumsum(samples_per_client))[:-1]
         local_datas = [di.tolist() for di in local_datas]
+        return local_datas
+
+
+class CompanyPartitioner(BasicPartitioner):
+    """Keep every company's records on exactly one federated client.
+
+    Companies are assigned with deterministic longest-processing-time bin
+    packing: the largest company is placed on the currently smallest client.
+    This preserves the natural company boundary while limiting imbalance.
+    """
+
+    def __init__(self, num_clients=5):
+        if int(num_clients) <= 0:
+            raise ValueError("num_clients must be positive")
+        self.num_clients = int(num_clients)
+
+    def __str__(self):
+        return "company_lpt"
+
+    @staticmethod
+    def _normalize_company(value):
+        company = re.sub(r"[^A-Z0-9]", "", str(value).strip().upper())
+        if not company:
+            raise ValueError("empty company label encountered")
+        return company
+
+    def _companies(self, data):
+        if hasattr(data, "id"):
+            values = list(data.id)
+        else:
+            values = []
+            for sample in data:
+                if isinstance(sample, dict):
+                    values.append(sample["company"])
+                else:
+                    values.append(sample[1])
+        if len(values) != len(data):
+            raise ValueError(
+                f"company label count {len(values)} != dataset size {len(data)}"
+            )
+        return [self._normalize_company(value) for value in values]
+
+    def __call__(self, data):
+        companies = self._companies(data)
+        grouped = collections.defaultdict(list)
+        for index, company in enumerate(companies):
+            grouped[company].append(index)
+
+        if len(grouped) < self.num_clients:
+            raise ValueError(
+                f"{len(grouped)} companies cannot populate "
+                f"{self.num_clients} non-empty clients"
+            )
+
+        local_datas = [[] for _ in range(self.num_clients)]
+        client_companies = [[] for _ in range(self.num_clients)]
+        client_sizes = [0] * self.num_clients
+        company_to_client = {}
+
+        for company, indices in sorted(
+            grouped.items(), key=lambda item: (-len(item[1]), item[0])
+        ):
+            client_id = min(
+                range(self.num_clients),
+                key=lambda cid: (client_sizes[cid], cid),
+            )
+            local_datas[client_id].extend(indices)
+            client_companies[client_id].append(company)
+            client_sizes[client_id] += len(indices)
+            company_to_client[company] = client_id
+
+        for indices in local_datas:
+            indices.sort()
+
+        self.local_datas = local_datas
+        self.client_companies = client_companies
+        self.company_to_client = company_to_client
+        self.client_sizes = client_sizes
+        return local_datas
+
+
+class PaperFiveCompanyPartitioner(CompanyPartitioner):
+    """Strict five-client layout reported by the FedE4RAG paper."""
+
+    COMPANY_ORDER = (
+        "AES",
+        "BOEING",
+        "ACTIVISIONBLIZZARD",
+        "PG",
+        "PEPSICO",
+    )
+
+    def __init__(self, num_clients=5):
+        if int(num_clients) != len(self.COMPANY_ORDER):
+            raise ValueError("paper-faithful partition requires exactly 5 clients")
+        super().__init__(num_clients=num_clients)
+
+    def __str__(self):
+        return "paper_five_company"
+
+    def __call__(self, data):
+        companies = self._companies(data)
+        grouped = collections.defaultdict(list)
+        for index, company in enumerate(companies):
+            grouped[company].append(index)
+
+        expected = set(self.COMPANY_ORDER)
+        observed = set(grouped)
+        if observed != expected:
+            raise ValueError(
+                "paper-faithful company roster mismatch: "
+                f"missing={sorted(expected - observed)}, "
+                f"unexpected={sorted(observed - expected)}"
+            )
+
+        local_datas = [sorted(grouped[name]) for name in self.COMPANY_ORDER]
+        self.local_datas = local_datas
+        self.client_companies = [[name] for name in self.COMPANY_ORDER]
+        self.company_to_client = {
+            name: client_id
+            for client_id, name in enumerate(self.COMPANY_ORDER)
+        }
+        self.client_sizes = [len(indices) for indices in local_datas]
         return local_datas
 
 class DirichletPartitioner(BasicPartitioner):
