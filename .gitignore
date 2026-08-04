@@ -221,3 +221,15 @@ artifacts/data/corpus_v1.jsonl
 # Official FedE4RAG release downloaded by validate_paper_faithful_data.py.
 # Keep the small hash manifest, not the ~150 MB source payload.
 artifacts/data/paper_faithful_source/
+
+# Local assistant/runtime state (machine-specific, regenerable)
+.codex/
+.venv-eval/
+.claude/
+
+# Local agent helper scripts. Already-tracked plans/handoffs remain versioned.
+.agents/scripts/
+.agents/*.sh
+
+# Local experiment outputs. Already-tracked frozen audit fixtures remain versioned.
+artifacts/
